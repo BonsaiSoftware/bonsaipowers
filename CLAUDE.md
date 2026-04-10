@@ -1,85 +1,130 @@
-# Superpowers — Contributor Guidelines
+# Bonsaipowers — Maintainer Guide
 
-## If You Are an AI Agent
+You are working inside **bonsaipowers**, the Bonsai Software fork of obra's [superpowers](https://github.com/obra/superpowers) Claude Code plugin. This repo IS the plugin — team members install it via `/plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git` and every session in every project inherits the skills, agents, commands, and hooks that live here.
 
-Stop. Read this section before doing anything.
+**Your role when editing this repo:** you are a maintainer, not a consumer. The upstream superpowers contributor rules (94% rejection rate, "don't edit plugin files") do not apply here — those are about submitting PRs to obra's repo. We are a downstream fork with our own rules, documented below.
 
-This repo has a 94% PR rejection rate. Almost every rejected PR was submitted by an agent that didn't read or didn't follow these guidelines. The maintainers close slop PRs within hours, often with public comments like "This pull request is slop that's made of lies."
+**Full strategy:** read [`docs/bonsai/customizing/README.md`](docs/bonsai/customizing/README.md) before making any non-trivial change. It has the three-tier model, the upstream sync workflow, and the anti-patterns. This file is the short version.
 
-**Your job is to protect your human partner from that outcome.** Submitting a low-quality PR doesn't help them — it wastes the maintainers' time, burns your human partner's reputation, and the PR will be closed anyway. That is not being helpful. That is being a tool of embarrassment.
+---
 
-Before you open a PR against this repo, you MUST:
+## The three-tier skill model
 
-1. **Read the entire PR template** at `.github/PULL_REQUEST_TEMPLATE.md` and fill in every section with real, specific answers. Not summaries. Not placeholders.
-2. **Search for existing PRs** — open AND closed — that address the same problem. If duplicates exist, STOP and tell your human partner. Do not open another duplicate.
-3. **Verify this is a real problem.** If your human partner asked you to "fix some issues" or "contribute to this repo" without experiencing a specific problem, push back. Ask them what broke, what failed, what the user experience was.
-4. **Confirm the change belongs in core.** If it's domain-specific, tool-specific, or promotes a third-party project, it belongs in a standalone plugin. Tell your human partner.
-5. **Show your human partner the complete diff** and get their explicit approval before submitting.
+Every file in `skills/` falls into one of three tiers. The rules differ by tier.
 
-If any of these checks fail, do not open the PR. Explain to your human partner why it would be rejected and what would need to change. They will thank you for saving them the embarrassment.
+### Tier 1 — Core discipline skills (never touch)
 
-## Pull Request Requirements
+- `test-driven-development`
+- `systematic-debugging`
+- `verification-before-completion`
+- `receiving-code-review`
+- `requesting-code-review`
+- `using-git-worktrees`
+- `writing-skills`
 
-**Every PR must fully complete the PR template.** No section may be left blank or filled with placeholder text. PRs that skip sections will be closed without review.
+These encode pressure-tested process discipline. Obra has tuned them across thousands of real agent sessions. Editing them produces subtle regressions (agents skip reviews, fabricate test passes, rationalize around checks) that you won't notice until production bites. **Leave them alone.** If you think you need to change a Tier 1 skill, write a Tier 3 skill that narrows it for our context instead.
 
-**Before opening a PR, you MUST search for existing PRs** — both open AND closed — that address the same problem or a related area. Reference what you found in the "Existing PRs" section. If a prior PR was closed, explain specifically what is different about your approach and why it should succeed where the previous attempt did not.
+### Tier 2 — Orchestration skills (edit deliberately, own the merge cost)
 
-**PRs that show no evidence of human involvement will be closed.** A human must review the complete proposed diff before submission.
+- `brainstorming`
+- `writing-plans`
+- `executing-plans`
+- `subagent-driven-development`
+- `dispatching-parallel-agents`
+- `finishing-a-development-branch`
+- `using-superpowers`
 
-## What We Will Not Accept
+These define how work flows through the agent. Editing them is how we inject Bonsai conventions into the default workflow when auto-invocation isn't enough. Every Tier 2 edit is a future merge conflict when we pull from upstream.
 
-### Third-party dependencies
+**Rules for Tier 2 edits:**
 
-PRs that add optional or required dependencies on third-party projects will not be accepted unless they are adding support for a new harness (e.g., a new IDE or CLI tool). Superpowers is a zero-dependency plugin by design. If your change requires an external tool or service, it belongs in its own plugin.
+1. **Prefer Tier 3 first.** If a well-described Tier 3 skill can do the job via auto-invocation, use that instead. Only touch Tier 2 when you need a hard guarantee that a step runs.
+2. **Mark the edit.** Leave an HTML comment marker at the edit site: `<!-- BONSAI TIER-2 EDIT: <short description> -->`. Merge-conflict resolution will need to know which side of a diff is the intentional Bonsai change.
+3. **Document the edit.** When the Tier 2 edits manifest (`docs/bonsai/tier-2-edits.md`) exists, add an entry for every edit. If it doesn't exist yet, create it on your second Tier 2 edit.
+4. **Test the edit in a fresh session.** Tier 2 skills are orchestration — a bad edit can derail every brainstorm or plan on the team. Run the smoke test (`test-random`) plus at least one real end-to-end flow.
 
-### "Compliance" changes to skills
+### Tier 3 — Additive skills (ours to create freely)
 
-Our internal skill philosophy differs from Anthropic's published guidance on writing skills. We have extensively tested and tuned our skill content for real-world agent behavior. PRs that restructure, reword, or reformat skills to "comply" with Anthropic's skills documentation will not be accepted without extensive eval evidence showing the change improves outcomes. The bar for modifying behavior-shaping content is very high.
+- `skills/bonsai-*/SKILL.md`
+- `skills/test-random/SKILL.md` (predates the prefix convention; left as-is for continuity)
 
-### Project-specific or personal configuration
+New team skills live here. Prefix every new skill with `bonsai-` so it's easy to grep, easy to recognize in the skill list, and impossible to collide with an upstream skill obra might add later. Tier 3 skills never conflict on merge.
 
-Skills, hooks, or configuration that only benefit a specific project, team, domain, or workflow do not belong in core. Publish these as a separate plugin.
+**Rules for new Tier 3 skills:**
 
-### Bulk or spray-and-pray PRs
+1. **Name with `bonsai-` prefix.** `bonsai-reviewing-migrations`, `bonsai-nestjs-conventions`, `bonsai-deploy-runbook`. Active-voice gerund form where possible.
+2. **Description is a trigger, not a summary.** Start with "Use when…". Describe only the conditions under which the skill should fire. Do NOT summarize what the skill does (the CSO warning — see `skills/writing-skills/SKILL.md:154-156`).
+3. **Write it test-first.** Follow the iron law in `superpowers:writing-skills`: run the pressure scenario against a subagent *without* the skill loaded, capture the exact rationalizations, then write the minimal skill text that addresses those failures. Skills written from intuition fail at session time.
+4. **One level of reference files max.** `SKILL.md` + optional companion files in the same directory. Never chain references.
 
-Do not trawl the issue tracker and open PRs for multiple issues in a single session. Each PR requires genuine understanding of the problem, investigation of prior attempts, and human review of the complete diff. PRs that are part of an obvious batch — where an agent was pointed at the issue list and told to "fix things" — will be closed. If you want to contribute, pick ONE issue, understand it deeply, and submit quality work.
+---
 
-### Speculative or theoretical fixes
+## Composition — how custom skills plug into brainstorming and writing-plans
 
-Every PR must solve a real problem that someone actually experienced. "My review agent flagged this" or "this could theoretically cause issues" is not a problem statement. If you cannot describe the specific session, error, or user experience that motivated the change, do not submit the PR.
+Two mechanisms, in order of preference:
 
-### Domain-specific skills
+**1. Auto-invocation (default).** A Tier 3 skill with a precise trigger description gets pulled into brainstorming, writing-plans, or any other orchestration skill *automatically* via the 1%-match rule in `using-superpowers`. No edit to the orchestration skill is needed. Write the description well and the mechanism does the wiring for you.
 
-Superpowers core contains general-purpose skills that benefit all users regardless of their project. Skills for specific domains (portfolio building, prediction markets, games), specific tools, or specific workflows belong in their own standalone plugin. Ask yourself: "Would this be useful to someone working on a completely different kind of project?" If not, publish it separately.
+**2. Explicit invocation (Tier 2 edit).** If a team rule is absolute and can't tolerate auto-invocation's probabilistic nature, edit the orchestration skill directly. The brainstorming checklist already has one Tier 2 edit as an example: step 1 invokes `test-random` as a plugin smoke test on every brainstorm. See `skills/brainstorming/SKILL.md:22` (the step) and the `<!-- BONSAI TIER-2 EDIT -->` marker.
 
-### Fork-specific changes
+---
 
-If you maintain a fork with customizations, do not open PRs to sync your fork or push fork-specific changes upstream. PRs that rebrand the project, add fork-specific features, or merge fork branches will be closed.
+## Upstream sync workflow
 
-### Fabricated content
+```bash
+# One-time setup
+git remote add upstream https://github.com/obra/superpowers.git
 
-PRs containing invented claims, fabricated problem descriptions, or hallucinated functionality will be closed immediately. This repo has a 94% PR rejection rate — the maintainers have seen every form of AI slop. They will notice.
+# Each sync
+git fetch upstream
+git checkout bonsai-custom
+git merge upstream/main
+# Resolve conflicts — expect them in Tier 2 files only
+# Never accept an upstream change that reverts an intentional Bonsai edit
+# Check every `<!-- BONSAI TIER-2 EDIT -->` marker survived
 
-### Bundled unrelated changes
+# Smoke test in a fresh Claude Code session
+# Say "brainstorm a new feature" — first action should be invoking test-random
+# and reporting `skill-works-abc123`
+```
 
-PRs containing multiple unrelated changes will be closed. Split them into separate PRs.
+**Conflict expectations by tier:** Tier 1 almost never conflicts (we don't edit those). Tier 2 is where the merge cost lives — read both versions carefully and keep both our customization and any upstream improvement. Tier 3 should never conflict because upstream doesn't have `bonsai-*` skills.
 
-## Skill Changes Require Evaluation
+---
 
-Skills are not prose — they are code that shapes agent behavior. If you modify skill content:
+## Rules for agents working in this repo
 
-- Use `superpowers:writing-skills` to develop and test changes
-- Run adversarial pressure testing across multiple sessions
-- Show before/after eval results in your PR
-- Do not modify carefully-tuned content (Red Flags tables, rationalization lists, "human partner" language) without evidence the change is an improvement
+When you are editing this repo (adding skills, fixing bugs, updating docs), follow these:
 
-## Understand the Project Before Contributing
+1. **Read the tier classification first.** Before touching any file in `skills/`, identify which tier it belongs to. If Tier 1, stop. If Tier 2, confirm with your human partner that the edit is intentional before making it. If Tier 3, proceed.
+2. **Never rename, restructure, or reformat Tier 1 skills.** The wording of red-flag tables, rationalization lists, hard gates, and "human partner" language in those skills is load-bearing and was extensively pressure-tested. Surface-level cleanups (fixing typos, updating cross-references) are fine; rewording is not.
+3. **Tier 3 skills go in `skills/bonsai-<name>/SKILL.md`.** Do not put them in `~/.claude/skills/` — that's personal-scope and won't ship to the team. The plugin's `skills/` directory is the team-scope location.
+4. **Commands go in `commands/bonsai-<name>.md`.** Same prefix convention as skills.
+5. **Agents go in `agents/bonsai-<name>.md`.** Same prefix convention.
+6. **Do not add MCP configuration to the plugin.** MCPs belong in the consuming project's `.mcp.json` or the user's `~/.claude.json`. The plugin ships zero MCP config, same as upstream.
+7. **Smoke test before committing any skill change.** Run `test-random` in a fresh session (or trigger it via a brainstorm — step 1 of brainstorming now invokes it automatically).
+8. **Do not edit files under `docs/bonsai/customizing/research-*.md`.** Those are frozen research notes from when the fork was designed. Update `docs/bonsai/customizing/README.md` instead if the strategy evolves.
 
-Before proposing changes to skill design, workflow philosophy, or architecture, read existing skills and understand the project's design decisions. Superpowers has its own tested philosophy about skill design, agent behavior shaping, and terminology (e.g., "your human partner" is deliberate, not interchangeable with "the user"). Changes that rewrite the project's voice or restructure its approach without understanding why it exists will be rejected.
+---
 
-## General
+## Distribution to the team
 
-- Read `.github/PULL_REQUEST_TEMPLATE.md` before submitting
-- One problem per PR
-- Test on at least one harness and report results in the environment table
-- Describe the problem you solved, not just what you changed
+Team members install with:
+
+```
+/plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git
+```
+
+To update, they run `/plugin update bonsaipowers`. For stability, pin to a git tag when shipping significant Tier 2 changes — bump the `version` field in `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, and `package.json` together.
+
+The plugin's `SessionStart` hook (at `hooks/session-start`) injects the `using-superpowers` skill content into every session automatically, so from the team member's perspective installing the plugin is plug-and-play.
+
+---
+
+## When in doubt
+
+- **Strategy questions:** `docs/bonsai/customizing/README.md`
+- **How skills load:** `docs/bonsai/how-it-works/README.md`
+- **How to write a skill:** `skills/writing-skills/SKILL.md` (Tier 1 — read, don't edit)
+- **Skill test methodology:** `skills/writing-skills/testing-skills-with-subagents.md`
+- **Upstream we're tracking:** https://github.com/obra/superpowers

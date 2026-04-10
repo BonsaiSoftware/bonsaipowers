@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Superpowers — Flow & Customization Hooks</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1d2029;
+    --border: #2a2f3a;
+    --text: #e6e8ee;
+    --muted: #8a93a6;
+    --core: #6aa9ff;
+    --skill: #9a7dff;
+    --iron: #ff6b6b;
+    --hook: #ffb547;
+    --hook-bg: #2a2418;
+    --arrow: #4a5268;
+    --accent: #7ae3b3;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 14px 0 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend .dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .stage h2 {
+    margin: 0 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .stage-num {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    text-align: center;
+    line-height: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-right: 8px;
+  }
+
+  .row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 6px 0;
+  }
+
+  .node {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    min-width: 160px;
+  }
+  .node .label {
+    font-weight: 600;
+    color: var(--core);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .node .meta {
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+  }
+  .node.skill .label { color: var(--skill); }
+  .node.iron {
+    border-color: var(--iron);
+  }
+  .node.iron .label { color: var(--iron); }
+
+  .arrow {
+    color: var(--arrow);
+    font-size: 18px;
+    flex: 0 0 auto;
+  }
+
+  .down {
+    display: flex;
+    justify-content: center;
+    color: var(--arrow);
+    font-size: 20px;
+    margin: 2px 0;
+  }
+
+  .hook {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--hook-bg);
+    border: 1px solid var(--hook);
+    color: var(--hook);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    cursor: help;
+    white-space: nowrap;
+  }
+  .hook-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .hook-row .label {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 4px;
+    align-self: center;
+  }
+
+  /* skills grid inside workflow */
+  .workflow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .wf-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .wf-step .step-body {
+    flex: 1;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .wf-step .step-body.gate { border-color: var(--iron); }
+  .wf-step .step-body .title {
+    font-weight: 600;
+    color: var(--skill);
+    margin-bottom: 4px;
+  }
+  .wf-step .step-body.gate .title { color: var(--iron); }
+  .wf-step .step-body .note {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .wf-step .num {
+    width: 26px; height: 26px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    text-align: center;
+    line-height: 24px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .fork {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-left: 40px;
+  }
+
+  .iron-laws {
+    background: var(--panel-2);
+    border: 1px solid var(--iron);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-left: 40px;
+  }
+  .iron-laws .title {
+    color: var(--iron);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .iron-laws ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+  .iron-laws li { margin: 2px 0; }
+
+  /* Hook detail panel */
+  .hooks-detail {
+    background: var(--panel);
+    border: 1px solid var(--hook);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-top: 32px;
+  }
+  .hooks-detail h2 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    color: var(--hook);
+  }
+  .hooks-detail .sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 18px;
+  }
+  .hooks-detail table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .hooks-detail th, .hooks-detail td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .hooks-detail th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .hooks-detail td code {
+    background: var(--panel-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .hooks-detail td:first-child {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    color: var(--hook);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .footer {
+    margin-top: 28px;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .footer code {
+    background: var(--panel-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Superpowers — Flow &amp; Customization Hooks</h1>
+    <div class="sub">How a session boots, how skills chain, and where <span style="color:var(--hook)">[C1–C7]</span> you can safely intervene without being clobbered by <code style="background:var(--panel-2);padding:1px 6px;border-radius:4px;color:var(--accent);font-family:monospace">/plugin update</code>.</div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--core)"></span>Boot / runtime</span>
+      <span><span class="dot" style="background:var(--skill)"></span>Skill</span>
+      <span><span class="dot" style="background:var(--iron)"></span>Iron law / hard gate</span>
+      <span><span class="dot" style="background:var(--hook)"></span>Customization hook</span>
+    </div>
+  </header>
+
+  <!-- STAGE 1: BOOT -->
+  <section class="stage">
+    <h2><span class="stage-num">1</span>Boot — SessionStart</h2>
+
+    <div class="row">
+      <div class="node">
+        <span class="label">Claude Code starts</span>
+        <span class="meta">startup | clear | compact</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="node">
+        <span class="label">hooks/hooks.json</span>
+        <span class="meta">SessionStart matcher</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="node">
+        <span class="label">run-hook.cmd</span>
+        <span class="meta">polyglot bash/cmd</span>
+      </div>
+    </div>
+
+    <div class="down">↓</div>
+
+    <div class="row">
+      <div class="node">
+        <span class="label">session-start script</span>
+        <span class="meta">reads using-superpowers/SKILL.md</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="node">
+        <span class="label">additionalContext</span>
+        <span class="meta">&lt;EXTREMELY_IMPORTANT&gt; tag</span>
+      </div>
+      <span class="arrow">→</span>
+      <div class="node">
+        <span class="label">spliced into system prompt</span>
+        <span class="meta">before user's 1st message</span>
+      </div>
+    </div>
+
+    <div class="hook-row">
+      <span class="label">customization</span>
+      <span class="hook" title="Add your own SessionStart / UserPromptSubmit / PostToolUse hooks in ~/.claude/settings.json. The plugin's hooks.json is clobbered on update.">[C1] ~/.claude/settings.json · hooks</span>
+    </div>
+  </section>
+
+  <!-- STAGE 2: CONTEXT ASSEMBLY -->
+  <section class="stage">
+    <h2><span class="stage-num">2</span>Context assembly — every turn</h2>
+
+    <div class="row" style="justify-content:space-between">
+
+      <div style="flex:1;min-width:320px">
+        <div class="node" style="width:100%">
+          <span class="label">Precedence stack (top wins)</span>
+          <span class="meta">
+            1. CLAUDE.md / AGENTS.md / GEMINI.md<br>
+            2. Superpowers skills<br>
+            3. Claude Code default prompt
+          </span>
+        </div>
+        <div class="hook-row">
+          <span class="hook" title="Project-scoped overrides. Narrow/disable any skill for THIS repo only. Highest precedence — beats any skill.">[C2] &lt;project&gt;/CLAUDE.md</span>
+          <span class="hook" title="Global personal overrides that apply in every project. Use for always-on rules like 'never use emoji'.">[C3] ~/.claude/CLAUDE.md</span>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:320px">
+        <div class="node" style="width:100%">
+          <span class="label">Skill discovery</span>
+          <span class="meta">
+            • &lt;plugin&gt;/skills/ (core — don't edit)<br>
+            • ~/.claude/skills/<br>
+            • &lt;project&gt;/.claude/skills/
+          </span>
+        </div>
+        <div class="hook-row">
+          <span class="hook" title="Personal skills visible in every project. Survives /plugin update.">[C4] ~/.claude/skills/&lt;name&gt;/SKILL.md</span>
+          <span class="hook" title="Project-only skills, versioned with the code.">[C5] &lt;project&gt;/.claude/skills/&lt;name&gt;/SKILL.md</span>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:320px">
+        <div class="node" style="width:100%">
+          <span class="label">Tool surface</span>
+          <span class="meta">
+            • built-in tools<br>
+            • &lt;project&gt;/.mcp.json<br>
+            • ~/.claude.json (user scope)
+          </span>
+        </div>
+        <div class="hook-row">
+          <span class="hook" title="Project MCP servers committed to git — shared with the team (Linear, GitHub, internal docs).">[C6] &lt;project&gt;/.mcp.json</span>
+          <span class="hook" title="Personal MCPs — edit via `/config`, never hand-edit ~/.claude.json.">[C7] ~/.claude.json (via /config)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 3: WORKFLOW -->
+  <section class="stage">
+    <h2><span class="stage-num">3</span>Canonical workflow — skill chain</h2>
+
+    <div class="workflow">
+
+      <div class="wf-step">
+        <div class="num">0</div>
+        <div class="step-body">
+          <div class="title">using-superpowers (meta)</div>
+          <div class="note">Auto-loaded at SessionStart. Teaches the agent: "if 1% chance a skill applies, invoke it via the Skill tool before responding."</div>
+        </div>
+      </div>
+      <div class="down">↓</div>
+
+      <div class="wf-step">
+        <div class="num">1</div>
+        <div class="step-body gate">
+          <div class="title">brainstorming · IRON LAW — HARD GATE</div>
+          <div class="note">No code, no scaffolding, no skill invocations until a design has been presented AND approved. Writes <code>docs/superpowers/specs/YYYY-MM-DD-*.md</code>.</div>
+        </div>
+      </div>
+      <div class="down">↓</div>
+
+      <div class="wf-step">
+        <div class="num">2</div>
+        <div class="step-body">
+          <div class="title">writing-plans</div>
+          <div class="note">Bite-sized tasks, exact file paths, complete code (no placeholders), self-review for coverage. Assumes you're already in a worktree.</div>
+        </div>
+      </div>
+      <div class="down">↓</div>
+
+      <div class="wf-step">
+        <div class="num">3</div>
+        <div class="step-body" style="border-color:var(--accent)">
+          <div class="title" style="color:var(--accent)">using-git-worktrees · REQUIRED before execution</div>
+          <div class="note">Invoked by brainstorming Phase 4, subagent-driven-development, and executing-plans — <b>not</b> by the session itself. Creates isolated workspace, verifies .gitignore, runs project setup, verifies clean test baseline. If none of the three callers fire, this step is skipped entirely.</div>
+        </div>
+      </div>
+      <div class="down">↓</div>
+
+      <div class="fork">
+        <div class="wf-step">
+          <div class="num">4a</div>
+          <div class="step-body">
+            <div class="title">subagent-driven-development</div>
+            <div class="note">Default. Calls using-git-worktrees first, then dispatches implementers + spec-reviewers + code-quality-reviewers per task.</div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="num">4b</div>
+          <div class="step-body">
+            <div class="title">executing-plans</div>
+            <div class="note">Inline variant — runs in the same session. Also calls using-git-worktrees first.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="iron-laws">
+        <div class="title">Fire at every step</div>
+        <ul>
+          <li><b style="color:var(--iron)">test-driven-development</b> — no production code without a failing test first</li>
+          <li><b style="color:var(--iron)">verification-before-completion</b> — no completion claims without fresh verification evidence</li>
+          <li><b style="color:var(--iron)">systematic-debugging</b> — no fixes without root-cause investigation; stop after 3 failed attempts</li>
+          <li><b style="color:var(--skill)">requesting-code-review ↔ receiving-code-review</b> — both directions per task</li>
+          <li><b style="color:var(--skill)">dispatching-parallel-agents</b> — when ≥3 independent failure domains exist</li>
+        </ul>
+      </div>
+
+      <div class="down">↓</div>
+
+      <div class="wf-step">
+        <div class="num">5</div>
+        <div class="step-body">
+          <div class="title">finishing-a-development-branch</div>
+          <div class="note">Merge · PR · keep · discard — structured decision, not ad-hoc.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CUSTOMIZATION HOOK DETAIL -->
+  <section class="hooks-detail">
+    <h2>Customization hooks — the survival matrix</h2>
+    <div class="sub">Everything below lives in <code>~/</code> or your repo. Nothing under the plugin dir survives <code>/plugin update</code>.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>What you get</th>
+          <th>Where it lives</th>
+          <th>Scope</th>
+          <th>Use for</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>[C1]</td>
+          <td>Custom hooks</td>
+          <td><code>~/.claude/settings.json</code></td>
+          <td>global</td>
+          <td>Auto-inject context, pre-flight checks, enforce repo rules at session boundaries</td>
+        </tr>
+        <tr>
+          <td>[C2]</td>
+          <td>Project overrides</td>
+          <td><code>&lt;project&gt;/CLAUDE.md</code></td>
+          <td>repo</td>
+          <td>Narrow or disable a skill for one project (e.g. "skip brainstorm for &lt;50 LOC")</td>
+        </tr>
+        <tr>
+          <td>[C3]</td>
+          <td>Global overrides</td>
+          <td><code>~/.claude/CLAUDE.md</code></td>
+          <td>global</td>
+          <td>Personal always-on rules ("never use emoji", "prefer rg over grep")</td>
+        </tr>
+        <tr>
+          <td>[C4]</td>
+          <td>Personal skills</td>
+          <td><code>~/.claude/skills/&lt;name&gt;/SKILL.md</code></td>
+          <td>global</td>
+          <td>Reusable skills across every project you work on</td>
+        </tr>
+        <tr>
+          <td>[C5]</td>
+          <td>Project skills</td>
+          <td><code>&lt;project&gt;/.claude/skills/&lt;name&gt;/SKILL.md</code></td>
+          <td>repo</td>
+          <td>Skills only this codebase needs — domain-specific review, migration rules, etc.</td>
+        </tr>
+        <tr>
+          <td>[C6]</td>
+          <td>Project MCPs</td>
+          <td><code>&lt;project&gt;/.mcp.json</code></td>
+          <td>repo</td>
+          <td>Shared team tools (Linear, GitHub, internal docs) — commit to git</td>
+        </tr>
+        <tr>
+          <td>[C7]</td>
+          <td>Personal MCPs</td>
+          <td><code>~/.claude.json</code> via <code>/config</code></td>
+          <td>global</td>
+          <td>Personal tools (Figma, personal Notion, personal GitHub account)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:18px;padding:12px 14px;background:var(--panel-2);border-left:3px solid var(--accent);border-radius:6px;font-size:12px;color:var(--muted)">
+      <b style="color:var(--accent)">Three leverage points, cheapest first:</b><br>
+      <b>1. Gate behavior</b> → CLAUDE.md (<b style="color:var(--hook)">C2/C3</b>). No new skills to maintain.<br>
+      <b>2. Add discipline</b> → custom skill (<b style="color:var(--hook)">C4/C5</b>). Follow writing-skills iron law: RED→GREEN→REFACTOR per skill.<br>
+      <b>3. Expand tools</b> → MCP (<b style="color:var(--hook)">C6/C7</b>). Orthogonal to skills; a skill can then reference <code>mcp__server__tool</code> by name.
+    </div>
+  </section>
+
+  <div class="footer">
+    Source: <code>docs/bonsai/how-it-works/README.md</code> · <code>docs/bonsai/customizing/README.md</code>. Hover any <span class="hook">[Cn]</span> pill for an inline note.
+  </div>
+
+</div>
+</body>
+</html>

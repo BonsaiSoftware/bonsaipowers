@@ -105,6 +105,42 @@ gemini extensions update superpowers
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
 
+<!-- BONSAI ADDITION: Local development section for the bonsaipowers fork. Preserve on upstream merge. -->
+
+### Local Development (Bonsai fork)
+
+If you've cloned this fork and want to test changes without pushing to a remote or installing through a marketplace, use Claude Code's `--plugin-dir` flag. This loads the plugin directly from your local clone for the current session only — no persistent install, no marketplace setup.
+
+```bash
+claude --plugin-dir /Volumes/corsair-ex/bonsai-git/bonsaipowers
+```
+
+**Session-scoped:** this is NOT a persistent install. Every time you launch `claude` without the flag, the plugin is not loaded. To make it ergonomic, add a shell alias:
+
+```bash
+alias claudebonsai='claude --plugin-dir /Volumes/corsair-ex/bonsai-git/bonsaipowers'
+```
+
+**Iteration loop:**
+
+1. Edit any file in the repo (`skills/`, `agents/`, `commands/`, `hooks/`, docs, etc.)
+2. Run `/reload-plugins` inside Claude Code to pick up the change — no restart needed
+3. Test the change in the same session
+
+**Smoke test** that the plugin is loaded correctly:
+
+1. Run `/help` — you should see skills listed under the `bonsaipowers` namespace (e.g., `/bonsaipowers:test-random`)
+2. Say `test random` in the chat — the agent should invoke the `test-random` skill and reply with `skill-works-abc123`
+3. Say `brainstorm a small feature` — the agent's first action should be invoking `test-random` (this verifies the Bonsai Tier 2 edit to the brainstorming checklist is in effect; see `docs/bonsai/tier-2-edits.md`)
+
+**Collision with upstream superpowers:** if you also have obra's `superpowers` plugin installed (either globally or via a marketplace), both will load and you'll see both sets of skills in `/help`. Because this fork is renamed to `bonsaipowers`, they coexist without namespace conflicts, but the duplicate skill list can be confusing. Uninstall the upstream copy while developing here if it gets in the way:
+
+```
+/plugin uninstall superpowers
+```
+
+For full maintainer documentation (three-tier skill model, upstream sync workflow, Tier 2 edit tracking), see [`docs/bonsai/customizing/README.md`](docs/bonsai/customizing/README.md) and [`CLAUDE.md`](CLAUDE.md).
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.

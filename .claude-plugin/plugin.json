@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "name": "bonsaipowers",
+  "description": "Bonsai team fork of superpowers: core discipline skills plus team-specific additions",
   "version": "5.0.7",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Nick",
+    "email": "nick@bonsaisoftware.nl"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/BonsaiSoftware/bonsaipowers",
+  "repository": "https://github.com/BonsaiSoftware/bonsaipowers",
   "license": "MIT",
   "keywords": [
     "skills",
