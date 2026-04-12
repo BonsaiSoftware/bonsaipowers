@@ -16,6 +16,15 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Required Skills
+
+    [CONTROLLER: Fill in from plan header's **Required Skills:** field]
+
+    Load each of these skills before writing any code:
+    - [e.g. nestjs-best-practices, owasp-security]
+
+    These are active constraints for your entire task — not optional.
+
     ## Before You Begin
 
     If you have questions about:
@@ -35,6 +44,28 @@ Task tool (general-purpose):
     4. Commit your work
     5. Self-review (see below)
     6. Report back
+
+    ## Execution Constraints
+
+    **Just-in-time API verification:**
+    If a task step references a library API and you're not sure of the exact
+    signature or behavior:
+    - One context7 query to verify before writing the code
+    - Do NOT guess from training data when the plan already pinned a version
+    - Do NOT research alternatives — the plan already decided the approach
+    - This is verification, not research
+
+    **Security gates:**
+    If a task step has OWASP constraints (⚠ or explicit "MUST" requirements):
+    - Implement EXACTLY as specified — requirements, not suggestions
+    - If you can't satisfy the constraint, STOP and report BLOCKED
+    - Your verification step must confirm the constraint is met
+
+    **Best-practices compliance:**
+    If a required skill is loaded:
+    - Follow its patterns when writing implementation code
+    - If the plan contradicts a best-practice, follow the plan
+    - If the plan is silent, follow the skill
 
     Work from: [directory]
 

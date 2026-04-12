@@ -22,6 +22,41 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Research (before writing tasks)
+
+For each technology, library, or service the spec references, run targeted research so that every code block in the plan uses verified APIs — not guessed-from-training ones. Research findings embed directly into tasks (see mapping table below), not into a separate document.
+
+1. **Resolve current APIs via context7** — pin library versions. Get actual method signatures, config options, return types. The question is "how does X work in 2026" not "how did X work when Claude was trained." If context7 can't resolve a library, fall back to WebSearch for official docs.
+
+2. **Best-practices skill load** (conditional on detected stack) — check if the spec's stack matches an available best-practices skill and invoke it:
+   - NestJS in stack? → invoke `nestjs-best-practices`
+   - React / Next.js? → invoke `vercel-react-best-practices`
+   - List every loaded skill in the plan header under **Required Skills:** so the implementer loads them too.
+
+3. **Security constraints via `owasp-security`** — does any planned task touch auth, user input, data storage, or external APIs? If yes: invoke `owasp-security`, pull the relevant OWASP patterns, and embed them as hard requirements on the task step — not optional suggestions, not footnotes. e.g. "MUST use parameterized queries" goes into the task that writes the query, not into a "security notes" appendix.
+
+4. **Don't-hand-roll check** — for each "build X" task in the plan outline: does a maintained library already do this? Query context7: `"{problem domain} {framework} library"`. If a well-maintained library exists: rewrite the task from "implement X" to "install and configure Y". Hand-rolling what a library does well is a plan failure.
+
+5. **Pitfall scan** — for each major library the plan depends on, query context7 or WebSearch: `"{library} common mistakes"` / `"{library} gotchas"`. Each pitfall that applies to a planned task becomes a warning constraint on that task step — e.g. *"⚠ Passport guards don't catch ExpiredTokenError — add exception filter"* goes directly above the step that sets up guards.
+
+6. **microsoft-docs** (only if Azure / Microsoft services are involved) — use `microsoft_code_sample_search` and `microsoft_docs_search` to pull official code samples for the specific service integration. Embed relevant samples as reference code blocks in the task.
+
+## How Research Flows Into the Plan
+
+Research findings don't sit in a separate document — they embed directly into tasks:
+
+| Research finding | Where it goes in the plan |
+|---|---|
+| Library version | Plan header **Tech Stack:** with pinned versions |
+| Best-practices skills | Plan header **Required Skills:** (implementer loads these) |
+| Method signature from context7 | Code blocks in task steps — actual API, not guessed |
+| OWASP constraint | Task step constraint: "MUST use parameterized queries" |
+| Don't-hand-roll item | Task rewritten from "build X" to "install + configure Y" |
+| Pitfall | Warning line (`⚠`) above the relevant step |
+| Code sample from docs | Reference code block in the task |
+
+<!-- BONSAI TIER-2 EDIT: Research section (steps 1-6) and "How Research Flows Into the Plan" table are team-specific additions not in upstream. On upstream merge, ensure both sections survive between Scope Check and File Structure. The Plan Document Header template also has an added **Required Skills:** field — keep it. -->
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
@@ -55,7 +90,9 @@ This structure informs the task decomposition. Each task should produce self-con
 
 **Architecture:** [2-3 sentences about approach]
 
-**Tech Stack:** [Key technologies/libraries]
+**Tech Stack:** [Key technologies/libraries with pinned versions from research]
+
+**Required Skills:** [Best-practices and security skills loaded during research, e.g. nestjs-best-practices, owasp-security]
 
 ---
 ```

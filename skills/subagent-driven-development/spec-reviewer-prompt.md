@@ -53,9 +53,17 @@ Task tool (general-purpose):
     - Did they solve the wrong problem?
     - Did they implement the right feature but wrong way?
 
+    **Security constraint verification:**
+    [CONTROLLER: Include this section only if the task has OWASP constraints]
+    If the task has security constraints (⚠ or "MUST" requirements):
+    - Verify each constraint is actually implemented in the code, not just claimed
+    - "MUST use parameterized queries" → find the query, confirm it's parameterized
+    - "MUST validate JWT expiry" → find the validation code, confirm it checks expiry
+    - A missing or weakened security constraint is a spec failure, same as a missing feature
+
     **Verify by reading code, not by trusting report.**
 
     Report:
-    - ✅ Spec compliant (if everything matches after code inspection)
+    - ✅ Spec compliant (if everything matches after code inspection, including security constraints)
     - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
 ```

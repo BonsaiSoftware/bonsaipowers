@@ -20,6 +20,7 @@ Load plan, review critically, execute all tasks, report when complete.
 2. Review critically - identify any questions or concerns about the plan
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create TodoWrite and proceed
+5. Read **Required Skills:** from the plan header and invoke each listed skill (e.g. `nestjs-best-practices`, `owasp-security`). These are active constraints for the entire execution — not optional. If a listed skill can't be found, STOP and tell the user.
 
 ### Step 2: Execute Tasks
 
@@ -28,6 +29,29 @@ For each task:
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
 4. Mark as completed
+
+**Just-in-time API verification:**
+If a task step references a library API and you're not sure of the exact signature or behavior:
+- One context7 query to verify before writing the code
+- Do NOT guess from training data when the plan already pinned a version
+- Do NOT research alternatives — the plan already decided the approach
+- This is verification, not research. The plan says `verifyAsync({ algorithms: ['RS256'] })`, you confirm that's the right signature for `@nestjs/jwt@11.0`, then write it.
+
+**Security gates (from loaded owasp-security skill):**
+If a task step has OWASP constraints (marked with `⚠` or explicit "MUST" requirements):
+- Implement EXACTLY as specified — these are requirements, not suggestions
+- If you can't satisfy the constraint, STOP and ask — do not skip it, do not weaken it
+- The verification step for that task must confirm the constraint is met
+- Example: "MUST use parameterized queries" means you write parameterized queries, you test that they're parameterized, you don't move on until they are
+
+**Best-practices compliance (from loaded skills):**
+If a required skill is loaded (e.g. `nestjs-best-practices`):
+- Follow its patterns when writing implementation code
+- If the plan contradicts a best-practice, follow the plan — the planner already made that tradeoff
+- If the plan is silent on something the skill covers, follow the skill
+- This is pattern compliance, not research — don't read reference files "just in case", only when the code you're writing falls under a rule
+
+<!-- BONSAI TIER-2 EDIT: Step 1 item 5 (required skill loading) and Step 2 execution constraints (JIT context7 verification, OWASP security gates, best-practices compliance) are team-specific additions not in upstream. On upstream merge, ensure Step 1 keeps the skill-loading item and Step 2 keeps all three constraint sub-sections before Step 3. -->
 
 ### Step 3: Complete Development
 

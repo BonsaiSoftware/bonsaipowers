@@ -58,12 +58,12 @@ digraph process {
         "Mark task complete in TodoWrite" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Read plan, extract tasks,\nload Required Skills,\ncreate TodoWrite" [shape=box style=filled fillcolor=lightyellow];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract tasks,\nload Required Skills,\ncreate TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -83,6 +83,18 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Controller Setup (before dispatching any subagent)
+
+After reading the plan and extracting tasks:
+
+1. **Load required skills** — read `**Required Skills:**` from the plan header and invoke each listed skill (e.g. `nestjs-best-practices`, `owasp-security`). These are active constraints for the entire execution. If a listed skill can't be found, STOP and tell the user.
+2. **Include skill names in every implementer prompt** — add a `## Required Skills` section to the implementer dispatch (see template addition below). The implementer subagent loads them itself — it's a fresh agent and doesn't inherit your loaded skills.
+3. **Include OWASP constraints in spec reviewer prompts** — when a task has security constraints, add them to the spec reviewer dispatch so the reviewer verifies they were implemented, not just the functional requirements.
+
+The controller is disciplined, not curious. Everything the subagents need should already be in the plan. The only external tool use you authorize for implementers is verifying an API signature — one context7 call, not an investigation.
+
+<!-- BONSAI TIER-2 EDIT: Controller setup section (skill loading + prompt injection), implementer-prompt.md additions (Required Skills, JIT context7, security gates, best-practices compliance), and spec-reviewer-prompt.md addition (OWASP verification) are team-specific additions not in upstream. On upstream merge, ensure all three files keep these additions. -->
 
 ## Model Selection
 

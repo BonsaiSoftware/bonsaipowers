@@ -1,0 +1,38 @@
+{
+  "name": "owasp-security",
+  "version": "1.0.0",
+  "description": "OWASP Top 10:2025 security patterns for React, Node.js, Azure, and cloud-native applications",
+  "author": "nick",
+  "stack": ["react", "nextjs", "nodejs", "express", "fastify", "azure", "typescript"],
+  "categories": [
+    "security",
+    "owasp",
+    "access-control",
+    "cryptography",
+    "injection",
+    "authentication",
+    "logging",
+    "error-handling",
+    "supply-chain",
+    "cloud"
+  ],
+  "ruleCount": 51,
+  "owaspVersion": "2025",
+  "triggers": [
+    "authentication",
+    "authorization",
+    "input validation",
+    "API endpoints",
+    "error handling",
+    "dependency management",
+    "secrets management",
+    "cryptography",
+    "logging",
+    "monitoring",
+    "security configuration",
+    "pull request review",
+    "CI/CD pipeline",
+    "cloud infrastructure",
+    "middleware"
+  ]
+}
