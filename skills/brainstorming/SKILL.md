@@ -22,17 +22,20 @@ Every project goes through this process. A todo list, a single-function utility,
 You MUST create a task for each of these items and complete them in order:
 
 1. **Bonsai plugin smoke test** — invoke the `test-random` skill and confirm it returns the expected test string. This verifies the bonsaipowers plugin is loaded and skill discovery is working before any real brainstorming begins. If the smoke test fails, stop and tell the user the plugin is broken.
-2. **Explore project context** — check files, docs, recent commits
+2. **Structured codebase recon** — check files, docs, recent commits, AND do a targeted scan: grep `package.json` (or equivalent manifest) for existing libraries, scan the nearest `CLAUDE.md` for project conventions, find the most similar existing feature and read how it's structured. Any approach you later propose must fit what's already there — proposing "use Redux" when the repo is Zustand wastes everyone's time.
 3. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
 4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-5. **Propose 2-3 approaches** — with trade-offs and your recommendation
-6. **Present design** — in sections scaled to their complexity, get user approval after each section
-7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-9. **User reviews written spec** — ask user to review the spec file before proceeding
-10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+5. **Research unknowns** — lean toward doing this. Skip only for very small tweaks or obviously-familiar territory. Two quick external checks, scaled to the task:
+   - **Feasibility spot-checks via context7** — when an approach depends on an API behavior you're not 100% sure exists. One query per uncertain question, yes/no granularity. Example: *"Does NestJS support WebSocket handlers with guards on the same decorator?"* — one query, binary answer, move on. Do NOT use context7 for implementation details; that's what writing-plans is for.
+   - **Prior-art scan via WebSearch** — when the problem has well-trodden solutions your training data may not reflect. Example: *"How do teams typically implement multi-tenant row-level security in Postgres 16?"* — returns 2-3 approaches to compare in your approach proposal. Use sparingly: one well-framed query beats three shotgun searches.
+6. **Propose 2-3 approaches** — with trade-offs and your recommendation. Research from step 5 should show up here: approaches that failed a feasibility check are off the table, approaches surfaced by prior-art are on it.
+7. **Present design** — in sections scaled to their complexity, get user approval after each section
+8. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+9. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+10. **User reviews written spec** — ask user to review the spec file before proceeding
+11. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
-<!-- BONSAI TIER-2 EDIT: Step 1 (smoke test) is a team-specific addition not in upstream. On upstream merge, ensure this step survives. -->
+<!-- BONSAI TIER-2 EDIT: Step 1 (smoke test), step 2 (structured codebase recon additions), and step 5 (research unknowns via context7 + WebSearch) are team-specific additions not in upstream. On upstream merge, ensure these steps survive and the numbering stays consistent (upstream has no step 1 and no step 5; its steps 1-9 map to our 2-4, 6-11 with step 2 upgraded). -->
 
 
 
@@ -41,10 +44,11 @@ You MUST create a task for each of these items and complete them in order:
 ```dot
 digraph brainstorming {
     "Bonsai plugin smoke test\n(invoke test-random)" [shape=box style=filled fillcolor=lightyellow];
-    "Explore project context" [shape=box];
+    "Structured codebase recon" [shape=box style=filled fillcolor=lightyellow];
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
     "Ask clarifying questions" [shape=box];
+    "Research unknowns\n(context7 + WebSearch)" [shape=box style=filled fillcolor=lightyellow];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
@@ -53,12 +57,13 @@ digraph brainstorming {
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
-    "Bonsai plugin smoke test\n(invoke test-random)" -> "Explore project context";
-    "Explore project context" -> "Visual questions ahead?";
+    "Bonsai plugin smoke test\n(invoke test-random)" -> "Structured codebase recon";
+    "Structured codebase recon" -> "Visual questions ahead?";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
     "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Ask clarifying questions" -> "Research unknowns\n(context7 + WebSearch)";
+    "Research unknowns\n(context7 + WebSearch)" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -84,11 +89,23 @@ digraph brainstorming {
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
+**Researching unknowns (before proposing approaches):**
+
+Once you understand the problem but before you propose approaches, decide whether you need external research. Lean toward doing it; skip only for very small tweaks or obviously-familiar territory.
+
+Two tools, two purposes:
+
+- **context7** — for feasibility questions about libraries, APIs, or frameworks. Use when an approach you're considering depends on behavior you aren't 100% sure exists. One query per uncertain question. Ask at the granularity of "does X support Y?" — not "how do I build a whole feature with X?". Implementation details belong in writing-plans, not brainstorming. If context7 says the behavior exists, move on; if it doesn't, that approach is off the table before you propose it.
+- **WebSearch** — for prior-art scans when the problem has well-trodden solutions that your training data may be stale on. Frame one good query rather than several vague ones. Example framings: *"how do teams typically do X in [tech] in 2025/2026"*, *"tradeoffs between approach A and approach B for Y"*. Bring what you find into the approach proposal as concrete named approaches to compare.
+
+What NOT to research: anything answerable by reading the repo (use the Structured codebase recon step for that); settled best practices you already know well; implementation-level details you'll work out during planning.
+
 **Exploring approaches:**
 
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
 - Lead with your recommended option and explain why
+- Approaches ruled out in the Research unknowns step should not reappear here; approaches surfaced there should
 
 **Presenting the design:**
 
