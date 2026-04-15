@@ -53,7 +53,8 @@ digraph process {
     "Stop + instructions" [shape=box];
     "Phase 2: Test plan generation\n(sonnet subagent, Task tool)" [shape=box];
     "Valid YAML?" [shape=diamond];
-    "Retry or abort" [shape=box];
+    "Retry or abort" [shape=diamond];
+    "Abort: report to user" [shape=doublecircle];
     "Phase 3: Test execution\n(main context, chrome-devtools MCP)" [shape=box];
     "Any FAIL?" [shape=diamond];
     "Phase 4a: Diagnose failures\n(parallel sonnet subagents)" [shape=box];
@@ -65,7 +66,8 @@ digraph process {
     "Chrome connected?" -> "Phase 2: Test plan generation\n(sonnet subagent, Task tool)" [label="yes"];
     "Phase 2: Test plan generation\n(sonnet subagent, Task tool)" -> "Valid YAML?";
     "Valid YAML?" -> "Retry or abort" [label="no"];
-    "Retry or abort" -> "Phase 2: Test plan generation\n(sonnet subagent, Task tool)";
+    "Retry or abort" -> "Phase 2: Test plan generation\n(sonnet subagent, Task tool)" [label="retry < 2"];
+    "Retry or abort" -> "Abort: report to user" [label="retries exhausted"];
     "Valid YAML?" -> "Phase 3: Test execution\n(main context, chrome-devtools MCP)" [label="yes"];
     "Phase 3: Test execution\n(main context, chrome-devtools MCP)" -> "Any FAIL?";
     "Any FAIL?" -> "Phase 4a: Diagnose failures\n(parallel sonnet subagents)" [label="yes"];
@@ -127,7 +129,7 @@ Runs entirely in the main orchestrator context using Bash, Read, Grep, Glob, and
 **Output of Phase 1:** in-memory context object:
 ```
 { branch, spec_path, plan_path, changed_files, commit_range, base_url,
-  connected_page_id, auth_hint }
+  connected_page_id }
 ```
 
 Nothing is written to disk in Phase 1.
@@ -161,7 +163,6 @@ Task tool (general-purpose):
     Spec:   {spec_path}
     Plan:   {plan_path}
     Base URL: {base_url}
-    Auth hint: {auth_hint or "none detected"}
     Changed files (from git diff):
       {list of paths, one per line}
     </context>
