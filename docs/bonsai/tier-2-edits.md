@@ -160,3 +160,51 @@ If the executor skips skill loading or ignores constraints, re-read `skills/exec
 5. On a task with OWASP constraints: confirm the spec reviewer's prompt includes the security constraint verification section, and the reviewer independently verifies the constraints are met
 6. If a required skill is missing: confirm the controller stops before dispatching any subagent
 If any of these are missing, check all three files (`SKILL.md`, `implementer-prompt.md`, `spec-reviewer-prompt.md`) and confirm the Bonsai additions survived the most recent upstream merge.
+
+---
+
+### 2026-04-12 — brainstorming: harden step 5 (context7 HARD-GATE) + Azure-native preference in step 6
+
+**File:** `skills/brainstorming/SKILL.md`
+**Marker:** Updated the existing `<!-- BONSAI TIER-2 EDIT -->` marker to cover these additions.
+**Commit:** _pending_
+
+**What changed:** Two additions to the brainstorming checklist and process body:
+
+1. **Step 5 hardened with HARD-GATE** — changed from "lean toward doing this" to mandatory. At least one context7 query is now required for any brainstorm involving external libraries, APIs, cloud services, or framework features. Skip is only permitted for pure internal refactors or config-only tweaks with zero external dependencies. Added explicit callout: "If you believe you can skip context7 entirely, you are almost certainly wrong — your training data is stale, verify anyway." The process body's "Researching unknowns" subsection now has a `<HARD-GATE>` block enforcing the same rule.
+
+2. **Azure-native preference in step 6 and "Exploring approaches"** — when a feature involves cloud infrastructure, storage, auth, messaging, or any service Azure provides natively, the agent must include the Azure-native option and recommend it by default. Non-Azure alternatives only recommended when there's a concrete technical reason (cost, feature gap, existing lock-in). Examples given: Azure Service Bus over self-hosted RabbitMQ, Azure Blob Storage over S3, Entra ID over custom auth, Azure Key Vault over manual secret management.
+
+**Why:** (1) Step 5's "lean toward" language gave agents an escape hatch to rationalize skipping context7 ("I already know this API"). Observed in practice: agent skipped context7 entirely during a brainstorm involving the GitHub Contents API via Octokit, only acknowledging the skip when the user pointed it out. A HARD-GATE makes the requirement unambiguous. (2) The team builds on Azure — proposing AWS-native or self-hosted alternatives wastes brainstorming time and leads to approaches that don't fit the deployment target. Making Azure-native the default recommendation eliminates this friction.
+
+**Verification:** In a fresh session, brainstorm a feature that involves an external library AND a cloud service (e.g., "add file upload to Azure Blob Storage with presigned URLs"):
+1. Confirm the agent runs at least one context7 query during step 5 before proposing approaches
+2. Confirm the agent does NOT skip step 5 with a rationalization like "I already know how Blob Storage works"
+3. Confirm the Azure-native option (Blob Storage + SAS tokens) is present in the 2-3 approaches and is the recommended one
+4. If a non-Azure alternative is recommended, confirm there's a stated concrete technical reason
+If the agent skips context7 or doesn't default to Azure-native, re-read step 5 (HARD-GATE), step 6 (Azure-native preference), and the "Researching unknowns" and "Exploring approaches" subsections.
+
+---
+
+### 2026-04-13 — brainstorming: harden step 5 WebSearch into HARD-GATE matching context7
+
+**File:** `skills/brainstorming/SKILL.md`
+**Marker:** Updated the existing `<!-- BONSAI TIER-2 EDIT -->` marker to cover this change.
+**Commit:** _pending_
+
+**What changed:** Step 5's WebSearch bullet promoted from "use sparingly" optional tool to mandatory, matching the context7 HARD-GATE. Three coordinated edits:
+
+1. **Checklist step 5 WebSearch bullet** — changed from "when the problem has well-trodden solutions your training data may not reflect ... Use sparingly" to "at least one query required. Your training data is stale and frequently misses approaches teams have converged on since." Added the same "you are almost certainly wrong to skip" framing as context7. Preamble changed from "Two quick external checks, scaled to the task" to "Two external checks, both required."
+
+2. **Process body `<HARD-GATE>` block** — updated to require BOTH a context7 query AND a WebSearch query before proposing approaches, with the same narrow escape hatch (zero external libs/APIs/cloud services). If either is skipped, the agent must state why in a single sentence.
+
+3. **Process body WebSearch description** — reframed from "for prior-art scans when the problem has well-trodden solutions" to "at least one query required for prior-art scans" with the stale-training-data rationale promoted to the lead and the "you are almost certainly wrong to skip" line added.
+
+**Why:** Despite the 2026-04-10 addition of WebSearch to step 5 and the 2026-04-12 context7 hardening, observed behavior in practice is that the agent runs context7 (which has a HARD-GATE) and rationalizes skipping WebSearch ("one query already counts as research," "the problem is well understood enough," "I know the prior art"). The result: brainstorms reflect training-data knowledge of approaches circa 2024/early-2025 and miss patterns teams have converged on since. WebSearch and context7 serve different purposes — context7 answers "does this API exist" while WebSearch answers "what approaches are teams actually using" — so they are not substitutes. Making WebSearch mandatory with the same HARD-GATE treatment eliminates the rationalization path.
+
+**Verification:** In a fresh session, brainstorm a feature that touches prior art (e.g., "add background job retries with exponential backoff in NestJS"). Confirm the agent:
+1. Runs at least one `context7` query during step 5
+2. Runs at least one `WebSearch` query during step 5 (not skipped, not deferred to writing-plans)
+3. References at least one finding from WebSearch when proposing approaches (e.g., "BullMQ's built-in retry config" or "the `p-retry` library pattern")
+4. If WebSearch is skipped, the agent states why in a single sentence and the justification matches the escape hatch (pure internal refactor, no external deps)
+If the agent skips WebSearch without justification, re-read `skills/brainstorming/SKILL.md` step 5, the `<HARD-GATE>` block in the "Researching unknowns" subsection, and the WebSearch description in that same subsection, and confirm all three enforce the mandatory-query rule after the most recent upstream merge.

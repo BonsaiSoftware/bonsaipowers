@@ -1,3 +1,43 @@
+<!-- BONSAI ADDITION: Install instructions for the Bonsai fork. Preserve on upstream merge. -->
+
+> **This is the Bonsai Software fork** of [obra/superpowers](https://github.com/obra/superpowers), customized with team-specific skills and Tier 2 orchestration edits. Team members should install from this repo, not upstream.
+
+## Install (Bonsai team)
+
+In Claude Code:
+
+```
+/plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git
+```
+
+The default branch on GitHub is `bonsai-custom` — that's where all Bonsai customization lives. The `main` branch is a clean mirror of upstream `obra/superpowers` used only for syncing; **do not install from `main`**, you'll get upstream without our edits.
+
+To update:
+
+```
+/plugin update bonsaipowers
+```
+
+After installing, start a new session and say `brainstorm a small feature`. The first action should be invoking `test-random` and reporting `skill-works-<hash>` — that confirms the Bonsai Tier 2 edits are loaded. If you only see upstream behavior, you're on the wrong branch.
+
+### Pinning to a specific version
+
+For critical work where you don't want surprise updates, pin to a tag:
+
+```
+/plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git#v5.0.7
+```
+
+Current version lives in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Maintainers tag stable points on `bonsai-custom` when significant Tier 2 changes ship.
+
+### Maintainers
+
+If you're editing this repo (not just installing it), read [`CLAUDE.md`](CLAUDE.md) and [`docs/bonsai/customizing/README.md`](docs/bonsai/customizing/README.md) before touching anything in `skills/` — the three-tier model determines what's safe to change. Local development loop is in the [Local Development section](#local-development-bonsai-fork) further down.
+
+<!-- END BONSAI ADDITION -->
+
+---
+
 # Superpowers
 
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
