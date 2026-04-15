@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Superpowers × Bonsaipowers — veldgids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0a07;
+  --bg-tint:#110f0a;
+  --ink:#f4efe3;
+  --ink-dim:#a39e91;
+  --ink-low:#4a4739;
+  --rule:#2a2620;
+  --rule-strong:#3b3729;
+  --accent:#a6e34a;
+  --accent-soft:rgba(166,227,74,.08);
+  --warn:#f26c3a;
+  --serif:'Fraunces',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden}
+body{
+  font-family:var(--sans);font-size:17px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
+  opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='3' seed='7'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:radial-gradient(ellipse 120% 80% at 50% 40%,transparent 40%,rgba(0,0,0,.5) 100%);
+}
+
+/* chrome */
+.chrome{position:fixed;inset:0;z-index:500;pointer-events:none}
+.wordmark{
+  position:absolute;top:3.4vh;left:4vw;
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  color:var(--ink-dim);text-transform:uppercase;
+  display:flex;gap:12px;align-items:center;
+}
+.wordmark svg{width:20px;height:20px;opacity:.9}
+.wordmark b{color:var(--ink);font-weight:500}
+.wordmark .sep{width:14px;height:1px;background:var(--rule-strong)}
+.edition{
+  position:absolute;top:3.4vh;right:4vw;
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  color:var(--ink-dim);text-transform:uppercase;
+}
+.edition .dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-right:8px;vertical-align:middle;box-shadow:0 0 8px var(--accent)}
+.count{
+  position:absolute;bottom:3.4vh;right:4vw;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink-dim);
+}
+.count b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.hint{
+  position:absolute;bottom:3.4vh;left:4vw;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink-dim);
+  display:flex;align-items:center;gap:8px;
+}
+.hint kbd{
+  font-family:var(--mono);font-size:10px;
+  border:1px solid var(--rule-strong);border-bottom-width:2px;
+  padding:2px 6px;border-radius:3px;color:var(--ink);background:var(--bg-tint);
+}
+
+.progress{
+  position:fixed;top:0;left:0;height:2px;background:var(--accent);z-index:600;
+  transition:width .55s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 12px var(--accent);width:0%;
+}
+
+/* slides */
+.deck{position:fixed;inset:0}
+.slide{
+  position:absolute;inset:0;
+  padding:10vh 8vw 8vh;
+  opacity:0;visibility:hidden;
+  transition:opacity .45s ease,transform .55s cubic-bezier(.2,.8,.2,1);
+  transform:translateY(10px);
+  display:grid;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:var(--rule-strong) transparent;
+}
+.slide::-webkit-scrollbar{width:6px}
+.slide::-webkit-scrollbar-track{background:transparent}
+.slide::-webkit-scrollbar-thumb{background:var(--rule-strong);border-radius:3px}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide .r{opacity:0;transform:translateY(20px)}
+.slide.active .r{animation:rise .95s cubic-bezier(.2,.8,.2,1) both}
+.slide.active .r:nth-child(1){animation-delay:.05s}
+.slide.active .r:nth-child(2){animation-delay:.18s}
+.slide.active .r:nth-child(3){animation-delay:.31s}
+.slide.active .r:nth-child(4){animation-delay:.44s}
+.slide.active .r:nth-child(5){animation-delay:.57s}
+.slide.active .r:nth-child(6){animation-delay:.70s}
+.slide.active .r:nth-child(7){animation-delay:.83s}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.25em;
+  text-transform:uppercase;color:var(--ink-dim);
+  display:flex;gap:16px;align-items:center;
+}
+.eyebrow .bar{width:42px;height:1px;background:var(--accent)}
+.eyebrow .num{color:var(--accent);font-weight:500}
+.eyebrow b{color:var(--ink);font-weight:500}
+
+/* ═══ 01 · WAAROM DIT WERKT ═══ */
+.s-why{grid-template-rows:auto auto 1fr;row-gap:3.5vh;align-content:start}
+.s-why .headline{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(42px,5.2vw,78px);line-height:.96;
+  letter-spacing:-.022em;max-width:22ch;
+  font-variation-settings:"opsz" 144;
+}
+.s-why .headline em{font-style:italic;color:var(--accent)}
+.s-why .headline b{font-weight:500}
+.reasons{
+  list-style:none;padding:0;margin:0;
+  padding-top:2vh;border-top:1px solid var(--rule);
+  display:flex;flex-direction:column;
+}
+.reasons li{
+  display:grid;grid-template-columns:60px 1fr;
+  gap:26px;padding:14px 0;
+  border-bottom:1px solid var(--rule);
+  align-items:baseline;
+}
+.reasons li:last-child{border-bottom:none}
+.reasons .n{
+  font-family:var(--serif);font-weight:500;
+  font-size:clamp(24px,2.4vw,34px);
+  color:var(--ink-low);line-height:1;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em;
+}
+.reasons .head{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(20px,2.1vw,28px);
+  color:var(--ink);line-height:1.2;
+  font-variation-settings:"opsz" 32;
+  letter-spacing:-.01em;display:block;
+}
+.reasons .head em{font-style:italic;color:var(--accent);font-weight:400}
+.reasons .head b{font-weight:500}
+.reasons .sub{
+  display:block;font-family:var(--sans);
+  font-size:13.5px;color:var(--ink-dim);line-height:1.5;
+  margin-top:4px;max-width:70ch;
+}
+
+/* ═══ 02 · DE KERN ═══ */
+.s-kern{align-content:center;row-gap:6vh}
+.s-kern .pull{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(48px,6.2vw,96px);line-height:1;
+  letter-spacing:-.025em;max-width:20ch;
+  font-variation-settings:"opsz" 144;
+}
+.s-kern .pull::before{
+  content:'«';color:var(--accent);font-size:.4em;
+  vertical-align:.55em;margin-right:.1em;
+}
+.s-kern .pull em{font-style:italic;color:var(--accent)}
+.s-kern .pull b{font-weight:500}
+.s-kern .attrib{
+  display:flex;gap:16px;align-items:center;
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-dim);
+  padding-left:3vw;
+}
+.s-kern .attrib .line{width:48px;height:1px;background:var(--rule-strong)}
+.s-kern .attrib b{color:var(--ink);font-weight:500}
+.s-kern .cap{
+  padding-left:3vw;max-width:50ch;
+  font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--ink-dim);
+}
+.s-kern .cap b{color:var(--ink);font-weight:500}
+.s-kern .cap em{color:var(--accent);font-style:italic}
+
+/* ═══ 03 · DE WORKFLOW ═══ */
+.s-flow{grid-template-rows:auto auto auto 1fr;row-gap:2.5vh;align-content:start}
+.s-flow .title{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(30px,3.6vw,50px);line-height:1.02;
+  letter-spacing:-.02em;max-width:30ch;
+  font-variation-settings:"opsz" 144;
+}
+.s-flow .title em{font-style:italic;color:var(--accent)}
+
+.legend{
+  display:flex;gap:22px;align-items:center;
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-dim);
+}
+.legend .swatch{display:inline-flex;align-items:center;gap:8px}
+.legend .swatch::before{
+  content:'';width:13px;height:13px;border-radius:50%;
+  border:1px solid var(--rule-strong);background:var(--bg);
+}
+.legend .swatch.b::before{border-color:var(--accent);background:var(--bg);box-shadow:0 0 10px rgba(166,227,74,.3)}
+.legend .swatch.n::before{background:var(--accent);border-color:var(--accent)}
+
+.flow{
+  position:relative;
+  padding:.5vh 0 .5vh 70px;
+  max-width:1120px;
+}
+.flow::before{
+  content:'';position:absolute;left:24px;top:1.2vh;bottom:1.2vh;width:1px;
+  background:linear-gradient(to bottom,transparent 0%,var(--accent) 8%,var(--accent) 92%,transparent 100%);
+  opacity:.35;
+}
+
+.phase{
+  position:relative;display:grid;
+  grid-template-columns:220px 1fr;gap:28px;
+  padding:9px 0;align-items:center;
+}
+.phase::before{
+  content:attr(data-num);position:absolute;
+  left:-70px;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:10px;font-weight:500;
+  color:var(--ink-dim);width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);border:1px solid var(--rule-strong);
+  border-radius:50%;font-variant-numeric:tabular-nums;letter-spacing:.05em;
+}
+.phase.b::before{
+  border-color:var(--accent);color:var(--accent);
+  box-shadow:0 0 0 4px var(--bg),0 0 16px rgba(166,227,74,.25);
+}
+.phase .name{
+  font-family:var(--serif);
+  font-size:clamp(19px,1.9vw,26px);
+  color:var(--ink);font-weight:400;
+  font-variation-settings:"opsz" 32;
+  letter-spacing:-.01em;line-height:1.1;
+}
+.phase .name small{
+  display:block;font-family:var(--mono);font-size:9px;
+  color:var(--ink-low);margin-top:4px;
+  text-transform:uppercase;letter-spacing:.15em;font-weight:400;
+}
+.phase .right{display:flex;flex-direction:column;gap:6px}
+.phase .adds{display:flex;flex-wrap:wrap;gap:5px 6px}
+.phase .add{
+  font-family:var(--mono);font-size:10px;letter-spacing:.02em;
+  color:var(--accent);padding:4px 9px;
+  border:1px solid var(--accent);background:var(--accent-soft);
+  border-radius:3px;white-space:nowrap;
+}
+.phase .add.new{background:var(--accent);color:var(--bg);font-weight:600;letter-spacing:.04em}
+.phase .add::before{content:'+ ';opacity:.7}
+.phase .add.new::before{content:'★ ';opacity:1}
+.phase .skills{
+  font-family:var(--mono);font-size:10px;
+  color:var(--ink-dim);letter-spacing:.04em;padding-left:1px;
+}
+.phase .skills .k{color:var(--ink-low);text-transform:uppercase;letter-spacing:.15em;margin-right:8px}
+.phase .skills b{color:var(--accent);font-weight:500;margin-right:4px}
+.phase .skills .dot{color:var(--ink-low);margin:0 4px}
+
+/* ═══ 04 · WAAROM HET WERKT ═══ */
+.s-three{grid-template-rows:auto auto 1fr;row-gap:5vh}
+.s-three .title{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(42px,5.2vw,76px);line-height:.98;
+  letter-spacing:-.02em;max-width:22ch;
+  font-variation-settings:"opsz" 144;
+}
+.s-three .title em{font-style:italic;color:var(--accent)}
+.s-three .cols{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:3vw;
+  padding-top:4vh;border-top:1px solid var(--rule);
+}
+.s-three .col{padding-right:2vw}
+.s-three .col .mark{
+  font-family:var(--serif);font-size:22px;color:var(--accent);
+  font-style:italic;font-weight:500;margin-bottom:16px;
+}
+.s-three .col h3{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(24px,2.4vw,34px);line-height:1.05;
+  letter-spacing:-.015em;margin:0 0 20px 0;max-width:13ch;
+  font-variation-settings:"opsz" 32;
+}
+.s-three .col p{
+  font-family:var(--sans);font-size:15px;line-height:1.6;
+  color:var(--ink-dim);margin:0;max-width:32ch;
+}
+.s-three .col p b{color:var(--ink);font-weight:600}
+
+/* ═══ 05 · INSTALLEREN & SLOT ═══ */
+.s-end{grid-template-rows:auto 1fr auto;row-gap:5vh;align-content:space-between}
+.s-end .center{align-self:center;display:flex;flex-direction:column;gap:6vh}
+.s-end .pull{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(50px,6.5vw,100px);line-height:.98;letter-spacing:-.025em;
+  max-width:20ch;
+  font-variation-settings:"opsz" 144;
+}
+.s-end .pull em{font-style:italic;color:var(--accent)}
+.s-end .pull b{font-weight:500}
+.s-end .install{
+  display:flex;flex-direction:column;gap:16px;
+  padding:26px 30px;border:1px solid var(--rule-strong);border-radius:5px;
+  background:var(--bg-tint);max-width:900px;
+}
+.s-end .install .lbl{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-dim);
+  display:flex;align-items:center;gap:10px;
+}
+.s-end .install .lbl::before{content:'';width:9px;height:9px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent)}
+.s-end .install .cmd{
+  font-family:var(--mono);font-size:clamp(15px,1.35vw,19px);color:var(--ink);
+}
+.s-end .install .cmd .prompt{color:var(--accent)}
+.s-end .footer{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-top:3vh;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);
+}
+.s-end .footer b{color:var(--ink);font-weight:500}
+.s-end .footer .end{
+  font-family:var(--serif);font-style:italic;font-size:22px;color:var(--accent);
+  text-transform:none;letter-spacing:0;
+}
+
+.tree{fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+
+@media(max-height:820px){
+  .slide{padding:9vh 7vw 7vh}
+  .phase{padding:7px 0}
+  .phase .name{font-size:clamp(18px,1.8vw,24px)}
+  .reasons li{padding:11px 0}
+}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="chrome">
+  <div class="wordmark">
+    <svg viewBox="0 0 24 24" class="tree" aria-hidden="true">
+      <path d="M12 22V13"/>
+      <path d="M12 13c-1-2-4-2-4-5s3-3 3-5 2-2 3 0 3 2 3 5-3 3-4 5"/>
+      <path d="M8 13c-2 .5-4 2-4 4M16 13c2 .5 4 2 4 4"/>
+      <path d="M4 22h16"/>
+    </svg>
+    <span>BONSAI<b>POWERS</b></span>
+    <span class="sep"></span>
+    <span>VELDGIDS</span>
+  </div>
+  <div class="edition"><span class="dot"></span>v1 · april 2026</div>
+  <div class="hint"><kbd>←</kbd><kbd>→</kbd> navigeer &nbsp;·&nbsp; <kbd>spatie</kbd> volgende</div>
+  <div class="count"><b id="cur">01</b> / <span id="tot">05</span></div>
+</div>
+
+<div class="deck" id="deck">
+
+<!-- ═══ 01 · WAAROM DIT WERKT ═══ -->
+<section class="slide s-why active">
+  <div class="r eyebrow"><span class="bar"></span><span class="num">§ 01</span><b>WAAROM DIT WERKT</b></div>
+  <div class="r headline">
+    Waarom het werkt —<br/>en waarom <em>wij</em> het willen.
+  </div>
+  <ol class="reasons">
+    <li class="r">
+      <div class="n">01</div>
+      <div>
+        <div class="head"><b>Design</b> vóór <em>code.</em></div>
+        <div class="sub">Socratische dialoog produceert een reviewbare spec vóórdat er één regel geschreven wordt. Geen improvisatie, geen halve features die halverwege worden teruggedraaid.</div>
+      </div>
+    </li>
+    <li class="r">
+      <div class="n">02</div>
+      <div>
+        <div class="head"><em>Verse</em> subagent per taak — met twee onafhankelijke reviewers.</div>
+        <div class="sub">Geen context-drift. Geen vergeten constraints. Elke taak wordt gebouwd alsof het de eerste is, dan gecheckt op spec-compliance én code-kwaliteit — beiden in een schone context.</div>
+      </div>
+    </li>
+    <li class="r">
+      <div class="n">03</div>
+      <div>
+        <div class="head"><em>Anti-rationalisatie</em> ingebakken.</div>
+        <div class="sub">De <b>1%-regel:</b> is er ook maar enige kans dat een skill past, dan MOET je 'm aanroepen. "Ik weet dit al" bestaat niet meer — geen sluiproutes om controles heen.</div>
+      </div>
+    </li>
+    <li class="r">
+      <div class="n">04</div>
+      <div>
+        <div class="head">Onze regels staan <em>in de code</em>, niet in de voetnoot.</div>
+        <div class="sub"><b>OWASP, Azure-native, NestJS</b> en <b>React</b> best-practices als harde constraints in elke task-step. De executor kan ze niet skippen. We leggen ze niet elke sessie opnieuw uit.</div>
+      </div>
+    </li>
+    <li class="r">
+      <div class="n">05</div>
+      <div>
+        <div class="head">Jij reviewt het <em>eindresultaat</em>, niet elke tussenstap.</div>
+        <div class="sub">De agent doet zelf de spec, het plan, de implementatie én de reviews. Minder babysitten. Consistentere kwaliteit — elke PR, niet alleen op goede dagen.</div>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- ═══ 02 · DE KERN ═══ -->
+<section class="slide s-kern">
+  <div class="r eyebrow"><span class="bar"></span><span class="num">§ 02</span><b>DE KERN</b></div>
+  <div class="r pull">
+    Een verplichte <em>workflow,</em> geladen als just-in-time <b>Markdown-skills.</b>
+  </div>
+  <div class="r attrib"><span class="line"></span>Jesse Vincent · <b>obra</b> · Prime Radiant</div>
+  <div class="r cap">
+    Geen fine-tuning. Geen custom runtime. <b>Procesdiscipline</b> geïnjecteerd via gestructureerde Markdown, precies geladen wanneer het relevant is. Afgedwongen met anti-rationalisatie-technieken uit de <em>overtuigingspsychologie.</em>
+  </div>
+</section>
+
+<!-- ═══ 03 · DE WORKFLOW ═══ -->
+<section class="slide s-flow">
+  <div class="r eyebrow"><span class="bar"></span><span class="num">§ 03</span><b>DE WORKFLOW</b></div>
+  <div class="r title">Eén loop. <em>Zeven fases.</em> Groene stappen zijn <em>van ons.</em></div>
+  <div class="r legend">
+    <span class="swatch">basis · superpowers</span>
+    <span class="swatch b">bonsai toevoegingen</span>
+    <span class="swatch n">nieuwe bonsai skill</span>
+  </div>
+  <div class="r flow">
+
+    <div class="phase b" data-num="01">
+      <div class="name">Brainstorm <small>socratische spec</small></div>
+      <div class="right">
+        <div class="adds">
+          <span class="add">gerichte recon</span>
+          <span class="add">context7 + WebSearch (verplicht)</span>
+          <span class="add">Azure-native standaard</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase b" data-num="02">
+      <div class="name">Plan schrijven <small>atomaire taken · vastgezette versies</small></div>
+      <div class="right">
+        <div class="adds">
+          <span class="add">Required Skills header</span>
+          <span class="add">vastgezette versies</span>
+          <span class="add">OWASP inline</span>
+        </div>
+        <div class="skills">
+          <span class="k">declareert</span>
+          <b>nestjs-best-practices</b><span class="dot">·</span>
+          <b>vercel-react-best-practices</b><span class="dot">·</span>
+          <b>owasp-security</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase" data-num="03">
+      <div class="name">Git worktree <small>geïsoleerde branch</small></div>
+      <div class="right"><div class="adds"></div></div>
+    </div>
+
+    <div class="phase b" data-num="04">
+      <div class="name">Subagent implementatie <small>verse context per taak</small></div>
+      <div class="right">
+        <div class="adds">
+          <span class="add">skills geladen per taak</span>
+          <span class="add">JIT context7 verificatie</span>
+          <span class="add">security gates afgedwongen</span>
+        </div>
+        <div class="skills">
+          <span class="k">dwingt af</span>
+          <b>nestjs-best-practices</b><span class="dot">·</span>
+          <b>vercel-react-best-practices</b><span class="dot">·</span>
+          <b>owasp-security</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase" data-num="05">
+      <div class="name">Spec + code review <small>onafhankelijke subagents</small></div>
+      <div class="right"><div class="adds"></div></div>
+    </div>
+
+    <div class="phase b" data-num="06">
+      <div class="name">Runtime UI-verificatie <small>/clear + echte chrome</small></div>
+      <div class="right">
+        <div class="adds">
+          <span class="add new">bonsai-verify-ui</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase" data-num="07">
+      <div class="name">Branch afronden <small>merge · PR · weggooien</small></div>
+      <div class="right"><div class="adds"></div></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ 04 · WAAROM HET WERKT ═══ -->
+<section class="slide s-three">
+  <div class="r eyebrow"><span class="bar"></span><span class="num">§ 04</span><b>WAAROM HET WERKT</b></div>
+  <div class="r title">Drie mechanismen. <em>Elke skill</em> leunt op alle drie.</div>
+  <div class="cols">
+    <div class="r col">
+      <div class="mark">i.</div>
+      <h3>Progressive disclosure</h3>
+      <p>Skill-metadata staat altijd in context. De body laadt alleen wanneer nodig. <b>Standaard zuinig.</b></p>
+    </div>
+    <div class="r col">
+      <div class="mark">ii.</div>
+      <h3>Anti-rationalisatie</h3>
+      <p>De <b>1%-regel:</b> is er ook maar enige kans dat een skill past, dan MOET je 'm aanroepen. Niet optioneel.</p>
+    </div>
+    <div class="r col">
+      <div class="mark">iii.</div>
+      <h3>Subagent-isolatie</h3>
+      <p>Verse context per taak. Onafhankelijke reviewers. <b>Reviewbare, herstelbare werkeenheden.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 05 · INSTALLEREN & SLOT ═══ -->
+<section class="slide s-end">
+  <div class="r eyebrow"><span class="bar"></span><span class="num">§ 05</span><b>INSTALLEREN &amp; SLOT</b></div>
+  <div class="center">
+    <div class="r pull">Het draait niet om <b>capaciteit.</b><br/>Maar om <em>discipline.</em></div>
+    <div class="r install">
+      <div class="lbl">INSTALLEREN — ÉÉN KEER PER DEV</div>
+      <div class="cmd"><span class="prompt">$</span> /plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git</div>
+    </div>
+  </div>
+  <div class="r footer">
+    <div>BONSAI<b>POWERS</b> · v1 · april 2026</div>
+    <div class="end">— einde.</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  const deck = document.getElementById('deck');
+  const slides = Array.from(deck.querySelectorAll('.slide'));
+  const progress = document.getElementById('progress');
+  const cur = document.getElementById('cur');
+  const tot = document.getElementById('tot');
+  let idx = 0;
+  tot.textContent = String(slides.length).padStart(2,'0');
+
+  function show(next){
+    next = Math.max(0, Math.min(slides.length - 1, next));
+    if (next === idx) return;
+    slides[idx].classList.remove('active');
+    slides[next].classList.add('active');
+    slides[next].scrollTop = 0;
+    slides[next].querySelectorAll('.r').forEach(el => {
+      el.style.animation = 'none';
+      void el.offsetHeight;
+      el.style.animation = '';
+    });
+    idx = next;
+    cur.textContent = String(idx + 1).padStart(2, '0');
+    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+  }
+
+  progress.style.width = (1 / slides.length * 100) + '%';
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(idx + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+    else if (e.key === 'Escape') { show(0); }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('a,kbd,code')) return;
+    show(idx + 1);
+  });
+
+  let tx = 0;
+  document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1));
+  }, {passive:true});
+})();
+</script>
+</body>
+</html>
