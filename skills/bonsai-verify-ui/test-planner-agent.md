@@ -114,7 +114,9 @@ Skip this bucket entirely if the project has no auth.
 ### Error states
 For every observable failure mode where the UI renders an error message:
 - Invalid server response (4xx, 5xx)
-- Network failure (if easily triggerable via the UI — otherwise skip)
+- Network failure (if easily triggerable via the UI; if not triggerable, add an entry to
+  `untestable_files` naming the component that handles the failure, with reason
+  "network failure not triggerable via UI")
 - Validation server error (different from client-side validation; test that the error is
   displayed when the server returns it)
 
@@ -158,7 +160,7 @@ source of the file under test:
 - Positional selectors (`nth-child`, `first-of-type`)
 - XPath
 
-The planner grep the actual source files — it does not guess selectors. If no acceptable
+The planner greps the actual source files — it does not guess selectors. If no acceptable
 selector exists in the source, the planner either (a) chooses a stable semantic fallback and
 notes it in the test's `expected` description, or (b) marks the file `untestable` with reason
 "no stable selectors available."
