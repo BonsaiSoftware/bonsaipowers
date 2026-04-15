@@ -244,3 +244,40 @@ If any of these are missing, re-read the `## Integration` sections of both files
 5. `docs/bonsai/customizing/customizations-made.md` and `docs/bonsai/customizing/README.md` no longer reference the smoke test or the `test-random` skill.
 6. `README.md` and `CLAUDE.md` no longer reference `test-random` for install verification.
 If any of these are still present after a merge, the removal was partially reverted and should be re-applied.
+
+---
+
+### 2026-04-15 — subagent-driven-development: add optional runtime UI verification breadcrumb
+
+**File:** `skills/subagent-driven-development/SKILL.md`
+**Marker:** `<!-- BONSAI TIER-2 EDIT: "Optional Runtime Verification" section, corresponding DOT flowchart node (dashed edge + lightyellow fill), and Integration "Optional downstream" entry for bonsai-verify-ui. On upstream merge, ensure all three survive. -->`
+**Commit:** `c2d9442`
+
+**What changed:** Five coordinated additions to `skills/subagent-driven-development/SKILL.md`, covered by two marker comments (a section-level marker above the Optional Runtime Verification section, and an adjacent `// BONSAI TIER-2 EDIT` comment inside the DOT block for merge-conflict visibility):
+
+1. **New `## Optional Runtime Verification (Bonsai)` section** inserted between `## Example Workflow` and `## Advantages`. Tells the implementer that after the final code reviewer approves, they MAY `/clear` the session and invoke the `bonsai-verify-ui` skill to runtime-verify the UI in Chrome via MCP. Explicit guidance on when to skip (backend-only, config, docs).
+
+2. **DOT flowchart update** in the `digraph process` block: new dashed edge (`style=dashed, color=gray50`) from the final code reviewer node to a new `lightyellow`-filled `Optional: /clear + invoke bonsai-verify-ui` node, and a solid edge from that node to the existing `Use superpowers:finishing-a-development-branch` node. Dashed edge visually marks the optionality.
+
+3. **New `**Optional downstream:**` sub-section** in the `## Integration` section at the bottom, listing `bonsai-verify-ui` as an optional downstream step.
+
+4. **Marker comment** immediately above the new section, covering all three changes as a single Tier 2 edit unit.
+
+5. **Adjacent DOT-block marker** inside the digraph process block, using DOT line-comment syntax (`// BONSAI TIER-2 EDIT: ...`), placed immediately above the new dashed edge. Ensures merge-conflict resolvers working in the flowchart region see a marker without scrolling to the section-level marker 130 lines below.
+
+**Why:** Every quality gate in `subagent-driven-development`'s per-task and final review loops is static — tests, code review, spec compliance. For UI work, static gates are necessary but not sufficient: a reviewer can approve code that lints, typechecks, has passing unit tests, matches the spec, and still produces a broken experience in a real browser (missing wiring, unhandled loading states, CORS errors, misconfigured routes, silent API failures, hydration mismatches). The team has seen this pattern repeatedly — "all green locally, broken on first manual test."
+
+The new `bonsai-verify-ui` skill (Tier 3, at `skills/bonsai-verify-ui/`) closes this gap by driving Chrome DevTools MCP from a fresh `/clear`ed session with only disk state as input. The Tier 2 edit to `subagent-driven-development` exists to make that skill *discoverable* from the implementation flow — without the breadcrumb, users would have to remember to invoke it, which defeats the whole point of having it in the workflow. The section explicitly says "optional" and lists when to skip, so non-UI work isn't penalized.
+
+The merge-conflict cost is deliberately minimized: the entire footprint is one section + one flowchart node + one integration line. No changes to implementer-prompt.md, spec-reviewer-prompt.md, or code-quality-reviewer-prompt.md. No changes inside the per-task loop. No new Required Skills, no new execution constraints.
+
+**Verification:** In a fresh Claude Code session on any branch where `bonsaipowers` is installed:
+
+1. Open `skills/subagent-driven-development/SKILL.md` and confirm the marker comment is present, immediately above an `## Optional Runtime Verification (Bonsai)` section that sits between `## Example Workflow` and `## Advantages`.
+2. Render the `digraph process` block mentally (or via `dot -Tpng`) and confirm there is a dashed edge from `Dispatch final code reviewer subagent for entire implementation` to a `lightyellow`-filled `Optional: /clear + invoke bonsai-verify-ui` node, and a solid edge from that node to `Use superpowers:finishing-a-development-branch`.
+3. In the `## Integration` section, confirm there is an `**Optional downstream:**` sub-section with an entry for `bonsai-verify-ui`.
+4. Run a real subagent-driven-development flow end-to-end on a small UI feature. After the final code reviewer reports ✅, confirm the agent mentions the optional runtime verification breadcrumb in its summary (i.e., actually tells the user they can `/clear` and invoke `bonsai-verify-ui`).
+
+If the marker, section, flowchart node, or integration entry is missing after an upstream merge, the merge-conflict resolution clobbered intentional Bonsai additions. Re-read this manifest entry and restore all five changes.
+
+---
