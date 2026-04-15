@@ -18,8 +18,8 @@
 
 **New files (Tier 3 skill):**
 - `skills/bonsai-verify-ui/SKILL.md` — orchestrator body, frontmatter + 4 phase sections
-- `skills/bonsai-verify-ui/references/test-planner-agent.md` — sonnet subagent protocol with mandatory coverage requirements
-- `skills/bonsai-verify-ui/references/chrome-devtools-execution-patterns.md` — assertion-type → MCP tool lookup table
+- `skills/bonsai-verify-ui/test-planner-agent.md` — sonnet subagent protocol with mandatory coverage requirements
+- `skills/bonsai-verify-ui/chrome-devtools-execution-patterns.md` — assertion-type → MCP tool lookup table
 
 **Edited files (Tier 2 breadcrumb):**
 - `skills/subagent-driven-development/SKILL.md` — add marker + "Optional Runtime Verification" section + dashed flowchart node + integration entry
@@ -36,7 +36,7 @@
 ## Task 1: Scaffold skill directory and write `chrome-devtools-execution-patterns.md`
 
 **Files:**
-- Create: `skills/bonsai-verify-ui/references/chrome-devtools-execution-patterns.md`
+- Create: `skills/bonsai-verify-ui/chrome-devtools-execution-patterns.md`
 
 This task creates the directory structure and the simplest reference file first — a pure lookup table with no dependencies on other files.
 
@@ -46,11 +46,11 @@ This task creates the directory structure and the simplest reference file first 
 mkdir -p skills/bonsai-verify-ui/references
 ```
 
-Verify: `ls -la skills/bonsai-verify-ui/references/` returns an empty directory.
+Verify: `ls -la skills/bonsai-verify-ui/` returns an empty directory.
 
 - [ ] **Step 2: Write `chrome-devtools-execution-patterns.md`**
 
-Create `skills/bonsai-verify-ui/references/chrome-devtools-execution-patterns.md` with this exact content:
+Create `skills/bonsai-verify-ui/chrome-devtools-execution-patterns.md` with this exact content:
 
 ```markdown
 # Chrome DevTools Execution Patterns
@@ -242,7 +242,7 @@ Read the file back and confirm:
 Run:
 
 ```bash
-grep -c "mcp__chrome-devtools__" skills/bonsai-verify-ui/references/chrome-devtools-execution-patterns.md
+grep -c "mcp__chrome-devtools__" skills/bonsai-verify-ui/chrome-devtools-execution-patterns.md
 ```
 
 Expected: at least 15 matches.
@@ -250,7 +250,7 @@ Expected: at least 15 matches.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add skills/bonsai-verify-ui/references/chrome-devtools-execution-patterns.md
+git add skills/bonsai-verify-ui/chrome-devtools-execution-patterns.md
 git commit -m "feat(bonsai-verify-ui): add chrome-devtools execution patterns reference"
 ```
 
@@ -259,13 +259,13 @@ git commit -m "feat(bonsai-verify-ui): add chrome-devtools execution patterns re
 ## Task 2: Write `test-planner-agent.md`
 
 **Files:**
-- Create: `skills/bonsai-verify-ui/references/test-planner-agent.md`
+- Create: `skills/bonsai-verify-ui/test-planner-agent.md`
 
 This is the protocol that a sonnet subagent reads to generate the YAML test plan. Adapted from the spec's Phase 2 section, with mandatory coverage requirements and a coverage audit step.
 
 - [ ] **Step 1: Write `test-planner-agent.md`**
 
-Create `skills/bonsai-verify-ui/references/test-planner-agent.md` with this exact content:
+Create `skills/bonsai-verify-ui/test-planner-agent.md` with this exact content:
 
 ````markdown
 # Test Planner Agent Protocol
@@ -564,13 +564,13 @@ Read the file back and confirm:
 Run:
 
 ```bash
-grep -c "^### " skills/bonsai-verify-ui/references/test-planner-agent.md
+grep -c "^### " skills/bonsai-verify-ui/test-planner-agent.md
 ```
 
 Expected: at least 5 (the 5 coverage sub-headers in Step 5).
 
 ```bash
-grep "requires_auth:" skills/bonsai-verify-ui/references/test-planner-agent.md | wc -l
+grep "requires_auth:" skills/bonsai-verify-ui/test-planner-agent.md | wc -l
 ```
 
 Expected: at least 3 (appears in the 3 example tests in the YAML block).
@@ -578,7 +578,7 @@ Expected: at least 3 (appears in the 3 example tests in the YAML block).
 - [ ] **Step 3: Commit**
 
 ```bash
-git add skills/bonsai-verify-ui/references/test-planner-agent.md
+git add skills/bonsai-verify-ui/test-planner-agent.md
 git commit -m "feat(bonsai-verify-ui): add test planner agent protocol"
 ```
 
@@ -633,8 +633,8 @@ next step (debug manually, re-dispatch to a fix pass, revert).
 
 ## Skill References
 
-- `references/test-planner-agent.md` — protocol for the sonnet test-planner subagent
-- `references/chrome-devtools-execution-patterns.md` — assertion-type → MCP tool lookup table
+- `test-planner-agent.md` — protocol for the sonnet test-planner subagent
+- `chrome-devtools-execution-patterns.md` — assertion-type → MCP tool lookup table
 
 Both files are read at runtime:
 - `test-planner-agent.md` is passed to the sonnet subagent via `<files_to_read>` in Phase 2
@@ -751,7 +751,7 @@ Task tool (general-purpose):
 
     <agent_instructions>
     Read and follow the test planner protocol:
-    skills/bonsai-verify-ui/references/test-planner-agent.md
+    skills/bonsai-verify-ui/test-planner-agent.md
     </agent_instructions>
 
     <context>
@@ -765,7 +765,7 @@ Task tool (general-purpose):
     </context>
 
     <files_to_read>
-    - skills/bonsai-verify-ui/references/test-planner-agent.md
+    - skills/bonsai-verify-ui/test-planner-agent.md
     - {spec_path}
     - {plan_path}
     - ./CLAUDE.md  (skip if not present)
@@ -791,7 +791,7 @@ where user describes tests`, `abort`.
 Main context runs the test plan. Deterministic loop over tests, no model calls, no subagents.
 All tool calls are `mcp__chrome-devtools__*`.
 
-**Read `references/chrome-devtools-execution-patterns.md` at the start of this phase** — it is
+**Read `chrome-devtools-execution-patterns.md` at the start of this phase** — it is
 the lookup table for everything this phase does.
 
 **Per-test flow:**
@@ -1013,20 +1013,20 @@ Expected: value less than or equal to 1024. If over, tighten the description unt
 Read the file back and confirm:
 - Frontmatter has only `name` and `description` — no `type`, `version`, `tags`, `model`
 - Has sections: `When to Use`, `Skill References`, `The Process`, `Phase 1`, `Phase 2`, `Phase 3`, `Phase 4`, `Red Flags`, `Integration`
-- References both `references/test-planner-agent.md` and `references/chrome-devtools-execution-patterns.md`
+- References both `test-planner-agent.md` and `chrome-devtools-execution-patterns.md`
 - DOT flowchart is present
 - Description starts with "Use when" (trigger-only, not a summary of what the skill does)
 
 Run:
 
 ```bash
-grep -c "references/test-planner-agent.md" skills/bonsai-verify-ui/SKILL.md
+grep -c "test-planner-agent.md" skills/bonsai-verify-ui/SKILL.md
 ```
 
 Expected: at least 2.
 
 ```bash
-grep -c "references/chrome-devtools-execution-patterns.md" skills/bonsai-verify-ui/SKILL.md
+grep -c "chrome-devtools-execution-patterns.md" skills/bonsai-verify-ui/SKILL.md
 ```
 
 Expected: at least 2.
@@ -1336,12 +1336,7 @@ Run all of these in order and confirm the expected output:
 ```bash
 ls skills/bonsai-verify-ui/
 ```
-Expected: `SKILL.md  references`
-
-```bash
-ls skills/bonsai-verify-ui/references/
-```
-Expected: `chrome-devtools-execution-patterns.md  test-planner-agent.md`
+Expected: `SKILL.md  chrome-devtools-execution-patterns.md  test-planner-agent.md` (flat layout per CLAUDE.md — no `references/` subdirectory)
 
 ```bash
 git log --oneline main..HEAD | head -10
