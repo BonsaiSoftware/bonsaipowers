@@ -238,6 +238,8 @@ Same as gsdn:
 
 ### Output format
 
+Each test is a dict with fields `id` (int), `name` (str), `url` (relative path), `requires_auth` (bool, defaults false, true if the URL is under an auth-protected route tree), `depends_on` (list of ids), `wait_for` (selector or null), `setup_actions` (list), `assertions` (list). The planner fills `requires_auth` based on its route-level auth analysis — this is what the executor reads in Phase 3 to decide whether to run the auth setup sequence before the test.
+
 ```yaml
 <test_plan>
 base_url: http://localhost:3000
@@ -258,6 +260,7 @@ tests:
   - id: 1
     name: "Dashboard loads with project list"
     url: /dashboard
+    requires_auth: true
     depends_on: []
     wait_for: "[data-testid='project-list']"
     setup_actions: []
@@ -274,6 +277,7 @@ tests:
   - id: 2
     name: "New project form — happy path"
     url: /projects/new
+    requires_auth: true
     depends_on: [1]
     wait_for: "form"
     setup_actions:
@@ -295,6 +299,7 @@ tests:
   - id: 3
     name: "New project form — validation failure on empty title"
     url: /projects/new
+    requires_auth: true
     depends_on: [1]
     wait_for: "form"
     setup_actions:
@@ -377,9 +382,12 @@ Ignore:
 - Hot module reload messages (`[HMR]`, `[Fast Refresh]`)
 - Favicon 404 (`GET /favicon.ico 404`)
 - Source map warnings (`DevTools failed to load source map`)
-- Next.js hydration mismatch warnings — only if the test has explicitly opted into ignoring them via `allow_hydration_warnings: true` (default false; hydration mismatches usually indicate real bugs and should fail the test)
 
-Only flag genuine application errors: uncaught exceptions, `console.error(...)` from app code, failed XHR/fetch calls, runtime errors.
+Never ignore:
+- Next.js hydration mismatch warnings — these usually indicate real bugs
+- Any `console.error(...)` call originating from app code
+- Uncaught exceptions
+- Failed `fetch`/XHR responses (4xx, 5xx, network errors)
 
 **Error recovery:**
 
@@ -396,7 +404,15 @@ Write a markdown report, spawn diagnosis subagents on failures, commit, and pres
 
 ### Report file
 
-**Path:** `docs/superpowers/verify/YYYY-MM-DD-<topic>-verify.md` where `<topic>` is derived from the plan filename (e.g., `docs/superpowers/plans/user-auth.md` → topic `user-auth`). Create the `docs/superpowers/verify/` directory if it doesn't exist.
+**Path:** `docs/superpowers/verify/YYYY-MM-DD-<topic>-verify.md` where `YYYY-MM-DD` is today's date and `<topic>` is derived from the plan filename by the following rules:
+
+1. Take the plan's basename without `.md` extension (e.g. `docs/superpowers/plans/user-auth.md` → `user-auth`)
+2. Strip any leading `YYYY-MM-DD-` date prefix if present (e.g. `2026-04-15-user-auth` → `user-auth`)
+3. The remaining string is the topic
+
+So `docs/superpowers/plans/2026-04-15-user-auth.md` produces `docs/superpowers/verify/2026-04-15-user-auth-verify.md`, and `docs/superpowers/plans/user-auth.md` run on the same day also produces `docs/superpowers/verify/2026-04-15-user-auth-verify.md`. Name collisions on a re-run the same day overwrite the previous report — this is intended behavior; the previous report is still in git history.
+
+Create the `docs/superpowers/verify/` directory if it doesn't exist.
 
 **Structure:**
 
@@ -432,7 +448,7 @@ untestable_files:
 - **url:** {test url}
 - **expected:** {description from test plan}
 - **result:** pass
-- **evidence:** {screenshot path}
+- **evidence:** Screenshot captured — referenced by resource ID `{uri returned by take_screenshot}`. Chrome DevTools MCP returns screenshots as resources, not file paths; the report records the resource URI so a future reader can re-fetch it via the MCP tool.
 
 ### 2. {Failing Test Name}
 
@@ -448,7 +464,7 @@ untestable_files:
   - "Uncaught TypeError: Cannot read property 'name' of undefined at Dashboard.tsx:42"
 - **failed_requests:**
   - GET /api/projects → 500 Internal Server Error
-- **evidence:** {screenshot path}
+- **evidence:** Screenshot resource URI from `take_screenshot`
 - **root_cause:** {from diagnosis subagent}
 - **affected_files:**
   - src/pages/Dashboard.tsx:42
