@@ -20,6 +20,18 @@ To update:
 
 After installing, start a new session and say `brainstorm a small feature`. The first checklist step should be "Structured codebase recon" (step 1) — the agent should grep `package.json`, read `CLAUDE.md`, and find a similar existing feature before asking any clarifying questions. Later, before proposing approaches, it should run at least one `context7` query AND one `WebSearch` query (the Tier 2 research HARD-GATE). If those Bonsai-specific behaviors are missing, you're on the wrong branch.
 
+### Required MCP servers
+
+The Bonsai workflow depends on three MCP servers that are **not** bundled with the plugin — per the "no MCP in plugin" rule (see `CLAUDE.md`), MCPs belong in the consuming project's `.mcp.json` (shared with the team, committed to git) or the user's `~/.claude.json` (personal, not shared). The plugin ships zero MCP config so it works cleanly with both per-project and per-user setups.
+
+| MCP | Used by | Why it's required |
+|-----|---------|---------|
+| **`context7`** | `brainstorming` (step 4 research HARD-GATE), `writing-plans` (research section), `executing-plans` (JIT API verification), `subagent-driven-development` (implementer prompts) | Library documentation and API signature lookups. Without it, brainstorming fails its research gate, plans ship guessed method signatures, and implementers can't verify APIs before writing code. |
+| **`microsoft-docs`** | `writing-plans` (research step 6, Azure features) | Official Azure and Microsoft documentation plus code samples via `microsoft_code_sample_search`. Required whenever a plan touches an Azure service — which, for this team, is most of them. |
+| **`chrome-devtools`** | `bonsai-verify-ui` | Drives real Chrome from the orchestrator's main context (`mcp__chrome-devtools__navigate_page`, `click`, `fill`, `take_snapshot`, `evaluate_script`, etc.). Without it, runtime UI verification after `subagent-driven-development` cannot run. |
+
+Follow each MCP server's own install instructions. If any are missing, the relevant skills will surface an explicit error rather than silently degrading — but it's a lot faster to configure all three up front.
+
 ### Pinning to a specific version
 
 For critical work where you don't want surprise updates, pin to a tag:

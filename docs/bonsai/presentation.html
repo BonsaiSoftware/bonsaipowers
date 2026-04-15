@@ -302,20 +302,20 @@ body::after{
 .s-three .col p b{color:var(--ink);font-weight:600}
 
 /* ═══ 05 · INSTALLEREN & SLOT ═══ */
-.s-end{grid-template-rows:auto 1fr auto;row-gap:5vh;align-content:space-between}
-.s-end .center{align-self:center;display:flex;flex-direction:column;gap:6vh}
+.s-end{grid-template-rows:auto 1fr auto;row-gap:4vh;align-content:space-between}
+.s-end .center{align-self:center;display:flex;flex-direction:column;gap:3.5vh;max-width:920px}
 .s-end .pull{
   font-family:var(--serif);font-weight:400;
-  font-size:clamp(50px,6.5vw,100px);line-height:.98;letter-spacing:-.025em;
-  max-width:20ch;
+  font-size:clamp(38px,4.8vw,72px);line-height:1;letter-spacing:-.025em;
+  max-width:20ch;margin-bottom:1vh;
   font-variation-settings:"opsz" 144;
 }
 .s-end .pull em{font-style:italic;color:var(--accent)}
 .s-end .pull b{font-weight:500}
 .s-end .install{
-  display:flex;flex-direction:column;gap:16px;
-  padding:26px 30px;border:1px solid var(--rule-strong);border-radius:5px;
-  background:var(--bg-tint);max-width:900px;
+  display:flex;flex-direction:column;gap:12px;
+  padding:22px 26px;border:1px solid var(--rule-strong);border-radius:5px;
+  background:var(--bg-tint);
 }
 .s-end .install .lbl{
   font-family:var(--mono);font-size:11px;letter-spacing:.2em;
@@ -324,9 +324,38 @@ body::after{
 }
 .s-end .install .lbl::before{content:'';width:9px;height:9px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent)}
 .s-end .install .cmd{
-  font-family:var(--mono);font-size:clamp(15px,1.35vw,19px);color:var(--ink);
+  font-family:var(--mono);font-size:clamp(13px,1.15vw,16px);color:var(--ink);word-break:break-all;
 }
 .s-end .install .cmd .prompt{color:var(--accent)}
+
+.s-end .mcps{
+  display:flex;flex-direction:column;gap:10px;
+  padding:22px 26px;border:1px solid var(--rule-strong);border-radius:5px;
+}
+.s-end .mcps .lbl{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-dim);
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.s-end .mcps .lbl::before{content:'+';color:var(--accent);font-weight:600;font-size:14px}
+.s-end .mcps ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column}
+.s-end .mcps li{
+  display:grid;grid-template-columns:170px 1fr;gap:20px;
+  align-items:baseline;padding:10px 0;
+  border-bottom:1px dashed var(--rule);
+}
+.s-end .mcps li:last-child{border-bottom:none}
+.s-end .mcps .k{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:500}
+.s-end .mcps .v{font-family:var(--sans);font-size:13px;color:var(--ink-dim);line-height:1.5}
+.s-end .mcps .v b{color:var(--ink);font-weight:500}
+.s-end .mcps .note{
+  font-family:var(--sans);font-size:12px;color:var(--ink-low);
+  font-style:italic;margin-top:10px;padding-top:12px;border-top:1px solid var(--rule);
+}
+.s-end .mcps .note code{
+  font-family:var(--mono);font-style:normal;color:var(--ink-dim);
+  background:var(--bg-tint);padding:1px 6px;border-radius:2px;border:1px solid var(--rule);
+}
 .s-end .footer{
   display:flex;justify-content:space-between;align-items:baseline;
   padding-top:3vh;border-top:1px solid var(--rule);
@@ -540,8 +569,26 @@ body::after{
   <div class="center">
     <div class="r pull">Het draait niet om <b>capaciteit.</b><br/>Maar om <em>discipline.</em></div>
     <div class="r install">
-      <div class="lbl">INSTALLEREN — ÉÉN KEER PER DEV</div>
+      <div class="lbl">STAP 1 — DE PLUGIN (éénmalig per dev)</div>
       <div class="cmd"><span class="prompt">$</span> /plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git</div>
+    </div>
+    <div class="r mcps">
+      <div class="lbl">STAP 2 — MCP-SERVERS IN JE PROJECT</div>
+      <ul>
+        <li>
+          <div class="k">context7</div>
+          <div class="v"><b>Library-docs &amp; API-lookups.</b> Gebruikt in brainstorm (feasibility), plan-fase (pinned versions) en JIT-verificatie tijdens executie.</div>
+        </li>
+        <li>
+          <div class="k">microsoft-docs</div>
+          <div class="v"><b>Officiële Azure &amp; Microsoft docs.</b> Geraadpleegd in de plan-fase voor Azure-integraties en codevoorbeelden.</div>
+        </li>
+        <li>
+          <div class="k">chrome-devtools</div>
+          <div class="v"><b>Bestuurt echte Chrome.</b> Vereist voor <code style="font-family:var(--mono);color:var(--accent)">bonsai-verify-ui</code> — runtime UI-verificatie na implementatie.</div>
+        </li>
+      </ul>
+      <div class="note">Configureer in <code>.mcp.json</code> (project, gedeeld met team) of <code>~/.claude.json</code> (persoonlijk). De plugin bundelt bewust géén MCP-config.</div>
     </div>
   </div>
   <div class="r footer">
