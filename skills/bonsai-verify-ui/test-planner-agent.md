@@ -20,7 +20,7 @@ Read every file listed in the `<files_to_read>` block from the orchestrator prom
 - `./CLAUDE.md` if it exists (project conventions, test URLs, credential hints)
 
 Read the `<context>` block for:
-- Branch name, base URL, auth hint, list of changed files (from `git diff`)
+- Branch name, base URL, list of changed files (from `git diff`)
 
 ## Step 2: Explore What Was Built
 

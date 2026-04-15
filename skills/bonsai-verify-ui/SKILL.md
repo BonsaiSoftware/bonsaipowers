@@ -332,6 +332,13 @@ untestable_files:
 - **affected_files:**
   - {path}:{line}
 - **suggested_fix:** {one-line approach}
+
+### 3. {Skipped Test Name}
+
+- **url:** {test url}
+- **expected:** {description}
+- **result:** skipped
+- **reason:** {why — e.g., "depends on test #N which failed", "auth setup failed", "stopped after 3 consecutive failures"}
 ```
 
 ### 4c. Commit the report
