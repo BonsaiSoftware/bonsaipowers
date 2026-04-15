@@ -80,7 +80,9 @@ digraph process {
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Optional: /clear + invoke bonsai-verify-ui\n(runtime UI verification)" [style=dashed, color=gray50];
+    "Optional: /clear + invoke bonsai-verify-ui\n(runtime UI verification)" [shape=box style=filled fillcolor=lightyellow];
+    "Optional: /clear + invoke bonsai-verify-ui\n(runtime UI verification)" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -211,6 +213,26 @@ Final reviewer: All requirements met, ready to merge
 Done!
 ```
 
+<!-- BONSAI TIER-2 EDIT: "Optional Runtime Verification" section, corresponding DOT flowchart node (dashed edge + lightyellow fill), and Integration "Optional downstream" entry for bonsai-verify-ui. On upstream merge, ensure all three survive. -->
+
+## Optional Runtime Verification (Bonsai)
+
+After the final code reviewer approves and before finishing the branch, you MAY runtime-verify
+the UI in a real browser. This is skippable for non-UI work (backend-only, config, docs), but
+strongly recommended for any task that touches pages, components, forms, or user-facing flows.
+
+**How:** `/clear` the current session (to drop all accumulated context), then in the fresh
+session invoke the `bonsai-verify-ui` skill. It will read the spec, plan, and branch git log,
+generate a test plan, execute it via Chrome DevTools MCP, and write a report to
+`docs/superpowers/verify/`.
+
+**Why /clear:** the verification runs in a fresh session with only disk state as input. This
+avoids context pollution from the implementation flow and keeps the verification independent
+of whatever the implementer believed they built.
+
+**When to skip:** backend-only changes with no UI surface, pure refactors, docs-only edits,
+config tweaks. Use your judgment — if a user could observe the change in a browser, verify it.
+
 ## Advantages
 
 **vs. Manual execution:**
@@ -291,3 +313,6 @@ Done!
 
 **Alternative workflow:**
 - **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+
+**Optional downstream:**
+- **bonsai-verify-ui** - Runtime UI verification in a fresh session after implementation completes. Invoke via /clear + skill trigger after the final code reviewer approves.
