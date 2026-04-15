@@ -6,22 +6,24 @@ A manifest of all modifications to the fork, organized by skill and type. For th
 
 ## Tier 2 Edits (orchestration skill modifications)
 
-### brainstorming (2026-04-10)
+### brainstorming (2026-04-10, research step hardened 2026-04-12/13, smoke test removed 2026-04-15)
 
 **File:** `skills/brainstorming/SKILL.md`
 
-Three additions to the brainstorming checklist and flow:
+Two additions to the brainstorming checklist and flow (numbering reflects the current 10-step checklist after the 2026-04-15 smoke-test removal):
 
-1. **Step 1: Bonsai plugin smoke test** — invokes `test-random` skill before any brainstorming begins. Verifies the plugin is loaded and skill discovery works. Serves as both a functional check and a reference implementation of the Tier 2 edit pattern.
+1. **Step 1: Structured codebase recon** (upgraded from generic "Explore project context") — now requires targeted scanning: grep dependency manifests for existing libraries, scan `CLAUDE.md` for conventions, read the most similar existing feature. Ensures approach proposals fit what's already in the repo.
 
-2. **Step 2: Structured codebase recon** (upgraded from generic "Explore project context") — now requires targeted scanning: grep dependency manifests for existing libraries, scan `CLAUDE.md` for conventions, read the most similar existing feature. Ensures approach proposals fit what's already in the repo.
+2. **Step 4: Research unknowns** (new step, between clarifying questions and approach proposal) — mandatory research step gated on a HARD-GATE (added 2026-04-12 for context7, 2026-04-13 for WebSearch). Uses:
+   - **context7** for API feasibility spot-checks (yes/no granularity) — at least one query required
+   - **WebSearch** for prior-art scans (well-framed queries, not shotgun searches) — at least one query required
+   - Skip is only permitted for pure internal refactors or config-only tweaks with zero external dependencies
 
-3. **Step 5: Research unknowns** (new step, between clarifying questions and approach proposal) — conditional research step that leans toward doing the research. Uses:
-   - **context7** for API feasibility spot-checks (yes/no granularity)
-   - **WebSearch** for prior-art scans (well-framed queries, not shotgun searches)
-   - Skipped only for very small tweaks or obviously-familiar territory
+3. **Step 5: Azure-native preference in approach proposals** (added 2026-04-12) — when a feature involves cloud infrastructure, storage, auth, messaging, or any service Azure provides natively, the agent must include the Azure-native option and recommend it by default.
 
 DOT flowchart updated with `lightyellow` nodes for all Bonsai additions.
+
+A prior step 1 (`test-random` plugin smoke test) was removed on 2026-04-15 — it served its introductory purpose and the friction of running a no-op skill on every brainstorm outweighed the diagnostic value. See the corresponding entry in `../tier-2-edits.md`.
 
 ### writing-plans (2026-04-12)
 
@@ -77,7 +79,6 @@ Same constraints as executing-plans, adapted for the subagent dispatch model:
 
 | Skill | Purpose |
 |---|---|
-| `test-random` | Plugin smoke test — returns a known string to verify plugin is loaded |
 | `nestjs-best-practices` | NestJS production patterns (10 categories, selective reading) |
 | `vercel-react-best-practices` | React/Next.js performance optimization from Vercel Engineering |
 | `owasp-security` | OWASP Top 10 2025 security patterns for React, Node.js, Azure |

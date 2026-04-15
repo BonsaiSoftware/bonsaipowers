@@ -30,39 +30,27 @@ Every intentional edit to a Tier 2 (orchestration) skill in this fork. Used as t
 
 ## Entries
 
-### 2026-04-10 — brainstorming: add `test-random` smoke test as step 1
+### 2026-04-10 — brainstorming: upgrade step 1 (structured codebase recon) + insert step 4 (research unknowns)
 
 **File:** `skills/brainstorming/SKILL.md`
-**Marker:** `<!-- BONSAI TIER-2 EDIT: Step 1 (smoke test), step 2 (structured codebase recon additions), and step 5 (research unknowns via context7 + WebSearch) are team-specific additions not in upstream. On upstream merge, ensure these steps survive and the numbering stays consistent (upstream has no step 1 and no step 5; its steps 1-9 map to our 2-4, 6-11 with step 2 upgraded). -->`
+**Marker:** `<!-- BONSAI TIER-2 EDIT: Step 1 (structured codebase recon additions), step 4 (research unknowns via context7 + WebSearch with HARD-GATE on BOTH tools), and step 5 (Azure-native preference in approach proposals) are team-specific additions not in upstream. On upstream merge, ensure these steps survive and the numbering stays consistent (upstream has no step 4; its steps 1-9 map to our 1-3, 5-10 with step 1 upgraded). The Research unknowns process section also has a HARD-GATE requiring at least one context7 query AND at least one WebSearch query — preserve both. -->`
 **Commit:** _pending_
 
-**What changed:** Inserted a new checklist step (at position 1, shifting the original steps 1-9 to 2-10) that instructs the agent to invoke the `test-random` skill before any real brainstorming begins and halt if the expected response string is missing. Also added a corresponding node to the DOT flowchart (highlighted `lightyellow` so the Bonsai addition is visually obvious in rendered diagrams).
-
-**Why:** Two reasons. (1) Plug-and-play verification: when a teammate installs `bonsaipowers` and runs their first brainstorm, they get immediate confirmation that the plugin is loaded, skills are discoverable, and the `SessionStart` hook injected `using-superpowers` correctly. A broken install fails loudly on the first real task instead of silently producing degraded brainstorming. (2) Reference implementation: this edit demonstrates the Tier 2 edit pattern (marker comment + manifest entry + flowchart update) for future team members who need to add more invasive orchestration customizations.
-
-**Verification:** In a fresh Claude Code session in any project that has `bonsaipowers` installed, say "brainstorm a new feature". The agent's first action should be to invoke the `test-random` skill and report back `skill-works-abc123` before asking any brainstorming questions. If the agent skips this step, either the Tier 2 edit was lost on merge or the agent is not following the checklist — re-read `skills/brainstorming/SKILL.md:22` and confirm step 1 is present.
-
----
-
-### 2026-04-10 — brainstorming: upgrade step 2 (structured codebase recon) + insert step 5 (research unknowns)
-
-**File:** `skills/brainstorming/SKILL.md`
-**Marker:** Shared with the smoke-test edit above — single `<!-- BONSAI TIER-2 EDIT -->` comment covering all three Bonsai additions (smoke test, recon upgrade, research step).
-**Commit:** _pending_
+**Note on numbering:** the earlier shape of this edit was step 2 (recon) and step 5 (research) because a `test-random` smoke test occupied step 1. That smoke-test step was removed on 2026-04-15 — see the removal entry below. The recon step is now step 1 and the research step is now step 4.
 
 **What changed:** Two related additions to the brainstorming checklist and its accompanying DOT flowchart and Process-section prose:
 
-1. **Step 2 upgraded** from generic "Explore project context — check files, docs, recent commits" to "Structured codebase recon": check files/docs/commits PLUS grep the dependency manifest for existing libraries, scan the nearest `CLAUDE.md` for project conventions, find the most similar existing feature and read how it's structured. The rationale is baked into the step ("proposing Redux when the repo is Zustand wastes everyone's time"). DOT node recolored to `lightyellow` to mark the Bonsai edit.
-2. **Step 5 inserted** between "Ask clarifying questions" (step 4) and "Propose 2-3 approaches" (was 5, now 6). The new step, "Research unknowns", is a conditional research gate that leans toward doing the research — it is skipped only for very small tweaks or obviously-familiar territory. It directs the agent to use two tools with specific granularity constraints:
+1. **Step 1 upgraded** from generic "Explore project context — check files, docs, recent commits" to "Structured codebase recon": check files/docs/commits PLUS grep the dependency manifest for existing libraries, scan the nearest `CLAUDE.md` for project conventions, find the most similar existing feature and read how it's structured. The rationale is baked into the step ("proposing Redux when the repo is Zustand wastes everyone's time"). DOT node recolored to `lightyellow` to mark the Bonsai edit.
+2. **Step 4 inserted** between "Ask clarifying questions" (step 3) and "Propose 2-3 approaches" (was 4, now 5). The new step, "Research unknowns", is a conditional research gate that leans toward doing the research — it is skipped only for very small tweaks or obviously-familiar territory. It directs the agent to use two tools with specific granularity constraints:
    - **context7** for API/library feasibility spot-checks at yes/no granularity ("does NestJS support WebSocket + guards on the same decorator?"), one query per uncertain question. Implementation details are explicitly out of scope — those belong in writing-plans.
    - **WebSearch** for prior-art scans on problems with well-trodden solutions ("how do teams typically implement multi-tenant row-level security in Postgres 16?"), one well-framed query rather than several shotgun searches. Results feed the approach proposal directly.
-   Downstream effects: step 6 ("Propose 2-3 approaches") now explicitly says approaches ruled out by the research step are off the table and approaches surfaced by it are on it. A new "Researching unknowns (before proposing approaches)" subsection was added to the Process body (right before "Exploring approaches") with the full guidance on when to use each tool and what NOT to research. The DOT flowchart gained a `Research unknowns\n(context7 + WebSearch)` node (lightyellow) between clarifying questions and approach proposal.
+   Downstream effects: step 5 ("Propose 2-3 approaches") now explicitly says approaches ruled out by the research step are off the table and approaches surfaced by it are on it. A new "Researching unknowns (before proposing approaches)" subsection was added to the Process body (right before "Exploring approaches") with the full guidance on when to use each tool and what NOT to research. The DOT flowchart gained a `Research unknowns\n(context7 + WebSearch)` node (lightyellow) between clarifying questions and approach proposal.
 
-Steps 5-10 from the previous version were renumbered to 6-11 and the final count is now 11 checklist items.
+Steps 4-9 from upstream's version are renumbered to 5-10 in our checklist, and the final count is 10 checklist items.
 
-**Why:** Two pain points the team has hit repeatedly. (1) Approach proposals that don't fit the repo: the agent proposes an approach using a library the project isn't using, or contradicting a convention written down in `CLAUDE.md` that the agent never read. The upgraded step 2 forces a targeted recon (dependency manifest + `CLAUDE.md` + similar feature) instead of a vague "check files, docs, recent commits" that the agent can rationalize skipping. (2) Approach proposals that ignore well-trodden solutions or include ones that aren't actually feasible in the chosen framework: either the agent didn't know about a standard pattern because its training data is stale, or it assumed a framework supports something it doesn't and proposed an approach that falls over during planning. The new step 5 gives the agent two targeted external tools with explicit granularity — yes/no feasibility questions for context7, prior-art scans for WebSearch — and tells it to lean toward using them. Skipping the step is permitted only for very small tweaks, to avoid adding ceremony to trivial brainstorms.
+**Why:** Two pain points the team has hit repeatedly. (1) Approach proposals that don't fit the repo: the agent proposes an approach using a library the project isn't using, or contradicting a convention written down in `CLAUDE.md` that the agent never read. The upgraded step 1 forces a targeted recon (dependency manifest + `CLAUDE.md` + similar feature) instead of a vague "check files, docs, recent commits" that the agent can rationalize skipping. (2) Approach proposals that ignore well-trodden solutions or include ones that aren't actually feasible in the chosen framework: either the agent didn't know about a standard pattern because its training data is stale, or it assumed a framework supports something it doesn't and proposed an approach that falls over during planning. The new step 4 gives the agent two targeted external tools with explicit granularity — yes/no feasibility questions for context7, prior-art scans for WebSearch — and tells it to lean toward using them. Skipping the step is permitted only for very small tweaks, to avoid adding ceremony to trivial brainstorms.
 
-**Verification:** In a fresh Claude Code session, run a brainstorm for a non-trivial feature that touches an unfamiliar library or domain. The agent should: (a) in step 2, grep `package.json`/equivalent and read `CLAUDE.md` before asking clarifying questions, (b) after clarifying questions but before proposing approaches, do at least one `context7` query or `WebSearch` call (or explicitly state why it is skipping — which should only happen for very small tweaks), (c) reference what it learned from that research when presenting the 2-3 approaches. For a trivially small brainstorm (e.g., "add a new enum value"), the agent may skip step 5 entirely; confirm it at least considered the step rather than silently dropping it. If the agent skips the research step on a non-trivial brainstorm without justification, re-read `skills/brainstorming/SKILL.md:27-29` (step 5 text) and the "Researching unknowns" subsection in the Process body, and confirm both survived the most recent upstream merge.
+**Verification:** In a fresh Claude Code session, run a brainstorm for a non-trivial feature that touches an unfamiliar library or domain. The agent should: (a) in step 1, grep `package.json`/equivalent and read `CLAUDE.md` before asking clarifying questions, (b) after clarifying questions but before proposing approaches, do at least one `context7` query AND at least one `WebSearch` call (or explicitly state why it is skipping — which should only happen for very small tweaks), (c) reference what it learned from that research when presenting the 2-3 approaches. For a trivially small brainstorm (e.g., "add a new enum value"), the agent may skip step 4 entirely; confirm it at least considered the step rather than silently dropping it. If the agent skips the research step on a non-trivial brainstorm without justification, re-read `skills/brainstorming/SKILL.md` step 4 text and the "Researching unknowns" subsection in the Process body, and confirm both survived the most recent upstream merge.
 
 ---
 
@@ -163,48 +151,96 @@ If any of these are missing, check all three files (`SKILL.md`, `implementer-pro
 
 ---
 
-### 2026-04-12 — brainstorming: harden step 5 (context7 HARD-GATE) + Azure-native preference in step 6
+### 2026-04-12 — brainstorming: harden research step (context7 HARD-GATE) + Azure-native preference in approaches step
 
 **File:** `skills/brainstorming/SKILL.md`
 **Marker:** Updated the existing `<!-- BONSAI TIER-2 EDIT -->` marker to cover these additions.
 **Commit:** _pending_
 
+**Note on numbering:** as of 2026-04-15, the research step is step 4 and the approaches step is step 5 (previously 5 and 6 respectively — the shift is because the `test-random` smoke test that used to be step 1 was removed). This entry is described in the current numbering.
+
 **What changed:** Two additions to the brainstorming checklist and process body:
 
-1. **Step 5 hardened with HARD-GATE** — changed from "lean toward doing this" to mandatory. At least one context7 query is now required for any brainstorm involving external libraries, APIs, cloud services, or framework features. Skip is only permitted for pure internal refactors or config-only tweaks with zero external dependencies. Added explicit callout: "If you believe you can skip context7 entirely, you are almost certainly wrong — your training data is stale, verify anyway." The process body's "Researching unknowns" subsection now has a `<HARD-GATE>` block enforcing the same rule.
+1. **Research step (step 4) hardened with HARD-GATE** — changed from "lean toward doing this" to mandatory. At least one context7 query is now required for any brainstorm involving external libraries, APIs, cloud services, or framework features. Skip is only permitted for pure internal refactors or config-only tweaks with zero external dependencies. Added explicit callout: "If you believe you can skip context7 entirely, you are almost certainly wrong — your training data is stale, verify anyway." The process body's "Researching unknowns" subsection now has a `<HARD-GATE>` block enforcing the same rule.
 
-2. **Azure-native preference in step 6 and "Exploring approaches"** — when a feature involves cloud infrastructure, storage, auth, messaging, or any service Azure provides natively, the agent must include the Azure-native option and recommend it by default. Non-Azure alternatives only recommended when there's a concrete technical reason (cost, feature gap, existing lock-in). Examples given: Azure Service Bus over self-hosted RabbitMQ, Azure Blob Storage over S3, Entra ID over custom auth, Azure Key Vault over manual secret management.
+2. **Azure-native preference in approaches step (step 5) and "Exploring approaches"** — when a feature involves cloud infrastructure, storage, auth, messaging, or any service Azure provides natively, the agent must include the Azure-native option and recommend it by default. Non-Azure alternatives only recommended when there's a concrete technical reason (cost, feature gap, existing lock-in). Examples given: Azure Service Bus over self-hosted RabbitMQ, Azure Blob Storage over S3, Entra ID over custom auth, Azure Key Vault over manual secret management.
 
-**Why:** (1) Step 5's "lean toward" language gave agents an escape hatch to rationalize skipping context7 ("I already know this API"). Observed in practice: agent skipped context7 entirely during a brainstorm involving the GitHub Contents API via Octokit, only acknowledging the skip when the user pointed it out. A HARD-GATE makes the requirement unambiguous. (2) The team builds on Azure — proposing AWS-native or self-hosted alternatives wastes brainstorming time and leads to approaches that don't fit the deployment target. Making Azure-native the default recommendation eliminates this friction.
+**Why:** (1) The research step's original "lean toward" language gave agents an escape hatch to rationalize skipping context7 ("I already know this API"). Observed in practice: agent skipped context7 entirely during a brainstorm involving the GitHub Contents API via Octokit, only acknowledging the skip when the user pointed it out. A HARD-GATE makes the requirement unambiguous. (2) The team builds on Azure — proposing AWS-native or self-hosted alternatives wastes brainstorming time and leads to approaches that don't fit the deployment target. Making Azure-native the default recommendation eliminates this friction.
 
 **Verification:** In a fresh session, brainstorm a feature that involves an external library AND a cloud service (e.g., "add file upload to Azure Blob Storage with presigned URLs"):
-1. Confirm the agent runs at least one context7 query during step 5 before proposing approaches
-2. Confirm the agent does NOT skip step 5 with a rationalization like "I already know how Blob Storage works"
+1. Confirm the agent runs at least one context7 query during the research step (step 4) before proposing approaches
+2. Confirm the agent does NOT skip the research step with a rationalization like "I already know how Blob Storage works"
 3. Confirm the Azure-native option (Blob Storage + SAS tokens) is present in the 2-3 approaches and is the recommended one
 4. If a non-Azure alternative is recommended, confirm there's a stated concrete technical reason
-If the agent skips context7 or doesn't default to Azure-native, re-read step 5 (HARD-GATE), step 6 (Azure-native preference), and the "Researching unknowns" and "Exploring approaches" subsections.
+If the agent skips context7 or doesn't default to Azure-native, re-read the research step (HARD-GATE), the approaches step (Azure-native preference), and the "Researching unknowns" and "Exploring approaches" subsections.
 
 ---
 
-### 2026-04-13 — brainstorming: harden step 5 WebSearch into HARD-GATE matching context7
+### 2026-04-13 — brainstorming: harden research step WebSearch into HARD-GATE matching context7
 
 **File:** `skills/brainstorming/SKILL.md`
 **Marker:** Updated the existing `<!-- BONSAI TIER-2 EDIT -->` marker to cover this change.
 **Commit:** _pending_
 
-**What changed:** Step 5's WebSearch bullet promoted from "use sparingly" optional tool to mandatory, matching the context7 HARD-GATE. Three coordinated edits:
+**Note on numbering:** as of 2026-04-15, the research step is step 4 (previously step 5 — the shift is because the `test-random` smoke test that used to be step 1 was removed). This entry is described in the current numbering.
 
-1. **Checklist step 5 WebSearch bullet** — changed from "when the problem has well-trodden solutions your training data may not reflect ... Use sparingly" to "at least one query required. Your training data is stale and frequently misses approaches teams have converged on since." Added the same "you are almost certainly wrong to skip" framing as context7. Preamble changed from "Two quick external checks, scaled to the task" to "Two external checks, both required."
+**What changed:** The research step's WebSearch bullet promoted from "use sparingly" optional tool to mandatory, matching the context7 HARD-GATE. Three coordinated edits:
+
+1. **Checklist research step WebSearch bullet** — changed from "when the problem has well-trodden solutions your training data may not reflect ... Use sparingly" to "at least one query required. Your training data is stale and frequently misses approaches teams have converged on since." Added the same "you are almost certainly wrong to skip" framing as context7. Preamble changed from "Two quick external checks, scaled to the task" to "Two external checks, both required."
 
 2. **Process body `<HARD-GATE>` block** — updated to require BOTH a context7 query AND a WebSearch query before proposing approaches, with the same narrow escape hatch (zero external libs/APIs/cloud services). If either is skipped, the agent must state why in a single sentence.
 
 3. **Process body WebSearch description** — reframed from "for prior-art scans when the problem has well-trodden solutions" to "at least one query required for prior-art scans" with the stale-training-data rationale promoted to the lead and the "you are almost certainly wrong to skip" line added.
 
-**Why:** Despite the 2026-04-10 addition of WebSearch to step 5 and the 2026-04-12 context7 hardening, observed behavior in practice is that the agent runs context7 (which has a HARD-GATE) and rationalizes skipping WebSearch ("one query already counts as research," "the problem is well understood enough," "I know the prior art"). The result: brainstorms reflect training-data knowledge of approaches circa 2024/early-2025 and miss patterns teams have converged on since. WebSearch and context7 serve different purposes — context7 answers "does this API exist" while WebSearch answers "what approaches are teams actually using" — so they are not substitutes. Making WebSearch mandatory with the same HARD-GATE treatment eliminates the rationalization path.
+**Why:** Despite the 2026-04-10 addition of WebSearch to the research step and the 2026-04-12 context7 hardening, observed behavior in practice is that the agent runs context7 (which has a HARD-GATE) and rationalizes skipping WebSearch ("one query already counts as research," "the problem is well understood enough," "I know the prior art"). The result: brainstorms reflect training-data knowledge of approaches circa 2024/early-2025 and miss patterns teams have converged on since. WebSearch and context7 serve different purposes — context7 answers "does this API exist" while WebSearch answers "what approaches are teams actually using" — so they are not substitutes. Making WebSearch mandatory with the same HARD-GATE treatment eliminates the rationalization path.
 
 **Verification:** In a fresh session, brainstorm a feature that touches prior art (e.g., "add background job retries with exponential backoff in NestJS"). Confirm the agent:
-1. Runs at least one `context7` query during step 5
-2. Runs at least one `WebSearch` query during step 5 (not skipped, not deferred to writing-plans)
+1. Runs at least one `context7` query during the research step (step 4)
+2. Runs at least one `WebSearch` query during the research step (not skipped, not deferred to writing-plans)
 3. References at least one finding from WebSearch when proposing approaches (e.g., "BullMQ's built-in retry config" or "the `p-retry` library pattern")
 4. If WebSearch is skipped, the agent states why in a single sentence and the justification matches the escape hatch (pure internal refactor, no external deps)
-If the agent skips WebSearch without justification, re-read `skills/brainstorming/SKILL.md` step 5, the `<HARD-GATE>` block in the "Researching unknowns" subsection, and the WebSearch description in that same subsection, and confirm all three enforce the mandatory-query rule after the most recent upstream merge.
+If the agent skips WebSearch without justification, re-read `skills/brainstorming/SKILL.md` research step (step 4), the `<HARD-GATE>` block in the "Researching unknowns" subsection, and the WebSearch description in that same subsection, and confirm all three enforce the mandatory-query rule after the most recent upstream merge.
+
+---
+
+### 2026-04-15 — subagent-driven-development + executing-plans: demote using-git-worktrees from REQUIRED to OPTIONAL
+
+**Files:**
+- `skills/subagent-driven-development/SKILL.md`
+- `skills/executing-plans/SKILL.md`
+
+**Marker:** Each file has a dedicated `<!-- BONSAI TIER-2 EDIT: using-git-worktrees is demoted from REQUIRED to OPTIONAL ... -->` marker placed directly below the new "Optional workflow skills" block inside the `## Integration` section. These are separate from the earlier tier-2 markers in the same files (subagent-driven-development has its controller-setup marker near line 97; executing-plans has its step-1/step-2 marker near line 54) — keep all of them on merge.
+
+**What changed:** Moved `superpowers:using-git-worktrees` out of the "Required workflow skills" list in both files' `## Integration` sections into a new "Optional workflow skills" list, labeled `Optional: Set up isolated workspace when the task benefits from isolation`. No other text in the Integration section was changed; the remaining "Required workflow skills" bullets (writing-plans, requesting-code-review, finishing-a-development-branch) stay in place. The safety floor — "Never start implementation on main/master branch without explicit user consent" at `executing-plans/SKILL.md:87` — is unchanged. The Tier-1 file `skills/using-git-worktrees/SKILL.md` is intentionally NOT edited; its internal "Called by" section (which still reads "REQUIRED before executing any tasks") is descriptive metadata and leaving it alone is the right tradeoff vs. touching a Tier-1 file.
+
+**Why:** In the canonical Bonsai workflow for this repo, team members spend long sessions on `bonsai-custom` (the fork-maintenance branch) with no concurrent work to isolate from. The REQUIRED framing created needless friction every time a plan was executed — the agent would present a worktree choice as a gate to resolve, even though staying on the current branch was the obviously-correct answer. The softened framing lets the agent use judgment: invoke worktrees when isolation matters, skip when it doesn't. Auto-invocation of `using-git-worktrees` via its description trigger still works; only the "must set up before starting" framing is removed.
+
+**Verification:** In a fresh Claude Code session on `bonsai-custom` in the bonsaipowers repo, point Claude at any existing plan and ask it to execute using subagent-driven-development. Confirm:
+1. The agent does NOT treat worktree setup as a mandatory pre-execution gate — it proceeds with execution on the current branch unless there's a concrete isolation need.
+2. The "Never start implementation on main/master branch without explicit user consent" safety rule still fires if the user is on `main` or `master`.
+3. In `skills/subagent-driven-development/SKILL.md` and `skills/executing-plans/SKILL.md`, the `## Integration` sections have `superpowers:using-git-worktrees` under an **Optional workflow skills** heading, NOT under **Required workflow skills**, with the "Optional: Set up isolated workspace when the task benefits from isolation" label.
+4. Both files still have their respective `<!-- BONSAI TIER-2 EDIT: using-git-worktrees is demoted ... -->` marker directly below the new Optional block.
+If any of these are missing, re-read the `## Integration` sections of both files and confirm the worktree-demotion markers survived the most recent upstream merge.
+
+---
+
+### 2026-04-15 — brainstorming: REMOVED the `test-random` smoke test step (and the `test-random` skill)
+
+**File:** `skills/brainstorming/SKILL.md` (and deletion of `skills/test-random/`)
+**Marker:** none — this is a REMOVAL of a prior Bonsai edit, not an addition. There is no marker to preserve on merge because our file now matches upstream in this area again.
+**Commit:** _pending_
+
+**What changed:** The `test-random` smoke test that used to be step 1 of the brainstorming checklist was removed, along with the `skills/test-random/` directory that it invoked. The DOT flowchart node for the smoke test was also removed. As a result, brainstorming checklist numbering shifted by -1: what was step 2 (structured codebase recon) is now step 1, step 5 (research unknowns) is now step 4, step 6 (propose approaches) is now step 5, etc. Final count is 10 checklist items (previously 11). The 2026-04-10 entry above has been rewritten to the new numbering; the 2026-04-12 and 2026-04-13 brainstorming entries carry an explicit note about the renumbering.
+
+**Why:** The smoke test served two purposes when introduced: (1) plug-and-play install verification, and (2) a reference implementation of the Tier 2 edit pattern. Over time, (1) became unnecessary — install failures surface through other symptoms before a brainstorm runs, and the friction of invoking a no-op skill on every brainstorm outweighed the diagnostic value. Purpose (2) is now served by the much meatier brainstorming-research Tier 2 edits (the context7/WebSearch HARD-GATE and the Azure-native preference), which demonstrate the pattern in a load-bearing way. The `test-random` skill itself was the only thing the step invoked, so it was deleted along with the step.
+
+**Upstream-merge implication:** upstream has no step 1 smoke test and no `test-random` skill, so removing them brings us closer to upstream in this area. Future upstream merges should NOT introduce either back — if a merge resurrects a smoke test step or the `test-random` directory, that's upstream-side new work (unlikely) and would need a fresh decision.
+
+**Verification:** In a fresh Claude Code session, start a brainstorm. Confirm:
+1. The agent does NOT invoke `test-random` or mention "smoke test" as step 1.
+2. The first step is "Structured codebase recon" (numbered 1).
+3. The research step is numbered 4 (not 5), and the approaches step is numbered 5 (not 6).
+4. `skills/test-random/` does not exist on disk.
+5. `docs/bonsai/customizing/customizations-made.md` and `docs/bonsai/customizing/README.md` no longer reference the smoke test or the `test-random` skill.
+6. `README.md` and `CLAUDE.md` no longer reference `test-random` for install verification.
+If any of these are still present after a merge, the removal was partially reverted and should be re-applied.

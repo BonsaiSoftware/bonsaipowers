@@ -79,26 +79,7 @@ We classify every skill in `skills/` into one of three tiers. Each tier has a di
 
 This is the default path. 90% of what our team wants to add belongs here.
 
-### 1.1 Example: `skills/test-random/`
-
-We ship a trivial example skill at `skills/test-random/SKILL.md` to verify the plugin is loaded and skills are discoverable:
-
-```markdown
----
-name: test-random
-description: Returns a test string. Use when the user says "test random", "test string", or "/test-random".
----
-
-Reply to the user with exactly this:
-
-**Test string:** `skill-works-abc123`
-```
-
-Trigger it from any session after installing the plugin by saying `test random`. If Claude responds with the exact test string, the plugin is wired up correctly. If not, check that the SessionStart hook ran and the skill directory is discoverable.
-
-(This one kept its original name rather than `bonsai-test-random` — it predates the prefix convention. New skills should use the prefix.)
-
-### 1.2 The frontmatter — two fields, strict rules
+### 1.1 The frontmatter — two fields, strict rules
 
 ```yaml
 ---
@@ -117,7 +98,7 @@ description: Use when <specific triggering condition>, before <action>
 
 If you put the workflow in the description, agents will skip reading the body. Descriptions are discovery metadata, not documentation.
 
-### 1.3 How composition with brainstorming/writing-plans works
+### 1.2 How composition with brainstorming/writing-plans works
 
 A well-written Tier 3 skill gets auto-invoked during brainstorming and writing-plans **without any edit to those skills**. The mechanism is the 1%-match rule in `using-superpowers`: every turn, the agent scans all skill descriptions, and if a skill's description matches the current situation (even loosely), it invokes the skill.
 
@@ -131,7 +112,7 @@ will automatically fire during brainstorming's "Propose 2-3 approaches" step whe
 
 **This is the preferred path.** Write skills with precise trigger descriptions and let auto-invocation do the wiring.
 
-### 1.4 When auto-invocation isn't enough — edit orchestration skills (Tier 2)
+### 1.3 When auto-invocation isn't enough — edit orchestration skills (Tier 2)
 
 Sometimes a team rule is absolute (e.g., "every brainstorm for a backend feature must reference our NestJS conventions, no exceptions"). Auto-invocation is probabilistic — 1%-match is strong but not a hard guarantee. For hard guarantees, edit the orchestration skill itself.
 
@@ -172,8 +153,9 @@ git merge upstream/main
 # Do NOT expect conflicts in Tier 3 files (bonsai-*)
 # Do NOT accept upstream changes that revert a Tier 2 edit you intentionally made
 
-# Re-run the smoke test
-# In a fresh session: say "test random" and verify the response
+# Re-run the smoke test in a fresh session: run a real brainstorm and confirm
+# the Bonsai-specific checklist behavior is still intact (structured codebase
+# recon at step 1, context7 + WebSearch HARD-GATE at step 4).
 ```
 
 **Conflict strategy by tier:**
@@ -182,7 +164,7 @@ git merge upstream/main
 - **Tier 2 conflicts:** read both versions carefully. Keep your team customization AND whatever upstream improved. This is where the merge cost lives.
 - **Tier 3 conflicts:** should not happen. If one does, something is wrong — upstream doesn't have `bonsai-*` skills.
 
-**After every merge:** do a skill-list smoke test by opening a session and confirming `test-random` still responds with the expected string. If it doesn't, the plugin is broken and the team will hit it before you do.
+**After every merge:** do a behavioral smoke test by opening a fresh session and running a real brainstorm. Confirm the Bonsai-specific Tier 2 behavior is still in effect — the agent should do the step-1 structured codebase recon (not upstream's vague "Explore project context") and hit the step-4 context7 + WebSearch HARD-GATE before proposing approaches. If upstream behavior leaks through, a Tier 2 edit was lost in the merge.
 
 ---
 
@@ -218,7 +200,7 @@ Or via a private marketplace entry if we set one up. The plugin's `SessionStart`
 3. **Writing a Tier 3 skill without a failing baseline test.** You don't know what you're preventing. Run the pressure scenario first, capture the failure, then write the skill.
 4. **Adding MCP config to the plugin.** Wrong scope. MCPs go in the consuming project's `.mcp.json` or the user's `~/.claude.json`.
 5. **Making a Tier 2 edit without documenting it.** Your future self (or a teammate) will resolve a merge conflict and not know which side is intentional. Keep a manifest.
-6. **Forgetting the smoke test after a merge.** The `test-random` skill exists for exactly this reason. Use it.
+6. **Forgetting the behavioral smoke test after a merge.** Run a real brainstorm in a fresh session and confirm the Bonsai Tier 2 behavior (structured codebase recon at step 1, context7 + WebSearch HARD-GATE at step 4) still fires. Otherwise a silent merge regression ships to the team.
 7. **Skipping the `bonsai-` prefix on new skills.** Sooner or later obra ships a skill with the same name and you get a silent collision.
 
 ---
@@ -232,9 +214,8 @@ If you're setting up a new fork of the plugin from scratch:
 - [ ] Rename `package.json` `"name"` field to match
 - [ ] Grep for hardcoded "superpowers" references in `hooks/` and update as needed
 - [ ] Add `upstream` remote pointing at `https://github.com/obra/superpowers.git`
-- [ ] Add the test-random skill (or keep the existing one) as your smoke test
 - [ ] Write the first real team skill as a Tier 3 `bonsai-*` skill to validate the flow
-- [ ] Install the plugin in a test session and run the smoke test
+- [ ] Install the plugin in a test session and run a real brainstorm to confirm Tier 2 behavior is active
 
 ---
 

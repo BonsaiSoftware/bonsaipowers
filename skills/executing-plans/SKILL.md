@@ -89,6 +89,10 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Optional workflow skills:**
+- **superpowers:using-git-worktrees** - Optional: Set up isolated workspace when the task benefits from isolation
+<!-- BONSAI TIER-2 EDIT: using-git-worktrees is demoted from REQUIRED to OPTIONAL for this fork (team commonly works on the canonical bonsai-custom branch with no concurrent work to isolate from). In upstream, this bullet sits under "Required workflow skills" with "REQUIRED: Set up isolated workspace before starting". On merge, keep it under "Optional workflow skills". See docs/bonsai/tier-2-edits.md (2026-04-15). -->
+

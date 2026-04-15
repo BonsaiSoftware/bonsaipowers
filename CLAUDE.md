@@ -41,12 +41,11 @@ These define how work flows through the agent. Editing them is how we inject Bon
 1. **Prefer Tier 3 first.** If a well-described Tier 3 skill can do the job via auto-invocation, use that instead. Only touch Tier 2 when you need a hard guarantee that a step runs.
 2. **Mark the edit.** Leave an HTML comment marker at the edit site: `<!-- BONSAI TIER-2 EDIT: <short description> -->`. Merge-conflict resolution will need to know which side of a diff is the intentional Bonsai change.
 3. **Document the edit.** When the Tier 2 edits manifest (`docs/bonsai/tier-2-edits.md`) exists, add an entry for every edit. If it doesn't exist yet, create it on your second Tier 2 edit.
-4. **Test the edit in a fresh session.** Tier 2 skills are orchestration — a bad edit can derail every brainstorm or plan on the team. Run the smoke test (`test-random`) plus at least one real end-to-end flow.
+4. **Test the edit in a fresh session.** Tier 2 skills are orchestration — a bad edit can derail every brainstorm or plan on the team. Run at least one real end-to-end flow (a real brainstorm or plan execution) before committing.
 
 ### Tier 3 — Additive skills (ours to create freely)
 
 - `skills/bonsai-*/SKILL.md`
-- `skills/test-random/SKILL.md` (predates the prefix convention; left as-is for continuity)
 
 New team skills live here. Prefix every new skill with `bonsai-` so it's easy to grep, easy to recognize in the skill list, and impossible to collide with an upstream skill obra might add later. Tier 3 skills never conflict on merge.
 
@@ -65,7 +64,7 @@ Two mechanisms, in order of preference:
 
 **1. Auto-invocation (default).** A Tier 3 skill with a precise trigger description gets pulled into brainstorming, writing-plans, or any other orchestration skill *automatically* via the 1%-match rule in `using-superpowers`. No edit to the orchestration skill is needed. Write the description well and the mechanism does the wiring for you.
 
-**2. Explicit invocation (Tier 2 edit).** If a team rule is absolute and can't tolerate auto-invocation's probabilistic nature, edit the orchestration skill directly. The brainstorming checklist already has one Tier 2 edit as an example: step 1 invokes `test-random` as a plugin smoke test on every brainstorm. See `skills/brainstorming/SKILL.md:22` (the step) and the `<!-- BONSAI TIER-2 EDIT -->` marker.
+**2. Explicit invocation (Tier 2 edit).** If a team rule is absolute and can't tolerate auto-invocation's probabilistic nature, edit the orchestration skill directly. The brainstorming checklist has several Tier 2 edits as examples: the step-1 structured codebase recon, the step-4 context7 + WebSearch HARD-GATE research block, and the Azure-native preference in step 5. See `skills/brainstorming/SKILL.md` and its `<!-- BONSAI TIER-2 EDIT -->` marker.
 
 ---
 
@@ -84,8 +83,10 @@ git merge upstream/main
 # Check every `<!-- BONSAI TIER-2 EDIT -->` marker survived
 
 # Smoke test in a fresh Claude Code session
-# Say "brainstorm a new feature" — first action should be invoking test-random
-# and reporting `skill-works-abc123`
+# Say "brainstorm a small feature" — the first step of the checklist should be
+# "Structured codebase recon" (step 1), and the research step (step 4) should
+# run at least one context7 query AND one WebSearch query before proposing
+# approaches. If upstream behavior leaks through instead, a Tier 2 edit was lost.
 ```
 
 **Conflict expectations by tier:** Tier 1 almost never conflicts (we don't edit those). Tier 2 is where the merge cost lives — read both versions carefully and keep both our customization and any upstream improvement. Tier 3 should never conflict because upstream doesn't have `bonsai-*` skills.
@@ -102,7 +103,7 @@ When you are editing this repo (adding skills, fixing bugs, updating docs), foll
 4. **Commands go in `commands/bonsai-<name>.md`.** Same prefix convention as skills.
 5. **Agents go in `agents/bonsai-<name>.md`.** Same prefix convention.
 6. **Do not add MCP configuration to the plugin.** MCPs belong in the consuming project's `.mcp.json` or the user's `~/.claude.json`. The plugin ships zero MCP config, same as upstream.
-7. **Smoke test before committing any skill change.** Run `test-random` in a fresh session (or trigger it via a brainstorm — step 1 of brainstorming now invokes it automatically).
+7. **Smoke test before committing any skill change.** Run a real brainstorm or plan in a fresh session and confirm the Bonsai-specific behavior (structured codebase recon at step 1, context7 + WebSearch HARD-GATE at step 4, Azure-native preference in approach proposals) still fires.
 8. **Do not edit files under `docs/bonsai/customizing/research-*.md`.** Those are frozen research notes from when the fork was designed. Update `docs/bonsai/customizing/README.md` instead if the strategy evolves.
 
 ---
@@ -128,3 +129,4 @@ The plugin's `SessionStart` hook (at `hooks/session-start`) injects the `using-s
 - **How to write a skill:** `skills/writing-skills/SKILL.md` (Tier 1 — read, don't edit)
 - **Skill test methodology:** `skills/writing-skills/testing-skills-with-subagents.md`
 - **Upstream we're tracking:** https://github.com/obra/superpowers
+

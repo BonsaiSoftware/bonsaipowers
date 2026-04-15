@@ -21,21 +21,20 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Bonsai plugin smoke test** — invoke the `test-random` skill and confirm it returns the expected test string. This verifies the bonsaipowers plugin is loaded and skill discovery is working before any real brainstorming begins. If the smoke test fails, stop and tell the user the plugin is broken.
-2. **Structured codebase recon** — check files, docs, recent commits, AND do a targeted scan: grep `package.json` (or equivalent manifest) for existing libraries, scan the nearest `CLAUDE.md` for project conventions, find the most similar existing feature and read how it's structured. Any approach you later propose must fit what's already there — proposing "use Redux" when the repo is Zustand wastes everyone's time.
-3. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-5. **Research unknowns** — this step is mandatory for any brainstorm that involves external libraries, APIs, cloud services, or framework features. Skip ONLY for pure internal refactors or config-only tweaks with zero external dependencies. Two external checks, both required:
+1. **Structured codebase recon** — check files, docs, recent commits, AND do a targeted scan: grep `package.json` (or equivalent manifest) for existing libraries, scan the nearest `CLAUDE.md` for project conventions, find the most similar existing feature and read how it's structured. Any approach you later propose must fit what's already there — proposing "use Redux" when the repo is Zustand wastes everyone's time.
+2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+4. **Research unknowns** — this step is mandatory for any brainstorm that involves external libraries, APIs, cloud services, or framework features. Skip ONLY for pure internal refactors or config-only tweaks with zero external dependencies. Two external checks, both required:
    - **Feasibility spot-checks via context7** — at least one query required. Verify that the API/library behavior your approach depends on actually exists in the current version. One query per uncertain question, yes/no granularity. Example: *"Does NestJS support WebSocket handlers with guards on the same decorator?"* — one query, binary answer, move on. Do NOT use context7 for implementation details; that's what writing-plans is for. If you believe you can skip context7 entirely, you are almost certainly wrong — your training data is stale, verify anyway.
    - **Prior-art scan via WebSearch** — at least one query required, more if the problem has several distinct decision points. Your training data is stale and frequently misses approaches teams have converged on in the last 12–18 months. Frame each query around current practice or tradeoffs between named approaches — one query per independent question is the right granularity, so run as many as the brainstorm needs. Example: *"How do teams typically implement multi-tenant row-level security in Postgres 16 in 2026?"* — returns approaches to compare in your proposal. If you believe you can skip WebSearch entirely because "I already know the prior art," you are almost certainly wrong — verify anyway.
-6. **Propose 2-3 approaches** — with trade-offs and your recommendation. Research from step 5 should show up here: approaches that failed a feasibility check are off the table, approaches surfaced by prior-art are on it. **Azure-native preference:** when the feature involves cloud infrastructure, storage, auth, messaging, or any service that Azure provides natively (e.g. Azure Service Bus over self-hosted RabbitMQ, Azure Blob Storage over S3, Entra ID over custom auth), always include the Azure-native option and recommend it unless there is a concrete technical reason not to.
-7. **Present design** — in sections scaled to their complexity, get user approval after each section
-8. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-9. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-10. **User reviews written spec** — ask user to review the spec file before proceeding
-11. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation. Research from step 4 should show up here: approaches that failed a feasibility check are off the table, approaches surfaced by prior-art are on it. **Azure-native preference:** when the feature involves cloud infrastructure, storage, auth, messaging, or any service that Azure provides natively (e.g. Azure Service Bus over self-hosted RabbitMQ, Azure Blob Storage over S3, Entra ID over custom auth), always include the Azure-native option and recommend it unless there is a concrete technical reason not to.
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
-<!-- BONSAI TIER-2 EDIT: Step 1 (smoke test), step 2 (structured codebase recon additions), step 5 (research unknowns via context7 + WebSearch with HARD-GATE on BOTH tools), and step 6 (Azure-native preference in approach proposals) are team-specific additions not in upstream. On upstream merge, ensure these steps survive and the numbering stays consistent (upstream has no step 1 and no step 5; its steps 1-9 map to our 2-4, 6-11 with step 2 upgraded). The Research unknowns process section also has a HARD-GATE requiring at least one context7 query AND at least one WebSearch query — preserve both. -->
+<!-- BONSAI TIER-2 EDIT: Step 1 (structured codebase recon additions), step 4 (research unknowns via context7 + WebSearch with HARD-GATE on BOTH tools), and step 5 (Azure-native preference in approach proposals) are team-specific additions not in upstream. On upstream merge, ensure these steps survive and the numbering stays consistent (upstream has no step 4; its steps 1-9 map to our 1-3, 5-10 with step 1 upgraded). The Research unknowns process section also has a HARD-GATE requiring at least one context7 query AND at least one WebSearch query — preserve both. -->
 
 
 
@@ -43,7 +42,6 @@ You MUST create a task for each of these items and complete them in order:
 
 ```dot
 digraph brainstorming {
-    "Bonsai plugin smoke test\n(invoke test-random)" [shape=box style=filled fillcolor=lightyellow];
     "Structured codebase recon" [shape=box style=filled fillcolor=lightyellow];
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
@@ -57,7 +55,6 @@ digraph brainstorming {
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
-    "Bonsai plugin smoke test\n(invoke test-random)" -> "Structured codebase recon";
     "Structured codebase recon" -> "Visual questions ahead?";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];

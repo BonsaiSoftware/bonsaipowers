@@ -18,7 +18,7 @@ To update:
 /plugin update bonsaipowers
 ```
 
-After installing, start a new session and say `brainstorm a small feature`. The first action should be invoking `test-random` and reporting `skill-works-<hash>` — that confirms the Bonsai Tier 2 edits are loaded. If you only see upstream behavior, you're on the wrong branch.
+After installing, start a new session and say `brainstorm a small feature`. The first checklist step should be "Structured codebase recon" (step 1) — the agent should grep `package.json`, read `CLAUDE.md`, and find a similar existing feature before asking any clarifying questions. Later, before proposing approaches, it should run at least one `context7` query AND one `WebSearch` query (the Tier 2 research HARD-GATE). If those Bonsai-specific behaviors are missing, you're on the wrong branch.
 
 ### Pinning to a specific version
 
@@ -169,9 +169,8 @@ alias claudebonsai='claude --plugin-dir /Volumes/corsair-ex/bonsai-git/bonsaipow
 
 **Smoke test** that the plugin is loaded correctly:
 
-1. Run `/help` — you should see skills listed under the `bonsaipowers` namespace (e.g., `/bonsaipowers:test-random`)
-2. Say `test random` in the chat — the agent should invoke the `test-random` skill and reply with `skill-works-abc123`
-3. Say `brainstorm a small feature` — the agent's first action should be invoking `test-random` (this verifies the Bonsai Tier 2 edit to the brainstorming checklist is in effect; see `docs/bonsai/tier-2-edits.md`)
+1. Run `/help` — you should see skills listed under the `bonsaipowers` namespace (e.g., `/bonsaipowers:brainstorming`, `/bonsaipowers:writing-plans`)
+2. Say `brainstorm a small feature` in the chat — the agent's first checklist step should be "Structured codebase recon" (step 1, a Bonsai Tier 2 addition), and before proposing approaches it should run both `context7` and `WebSearch` queries (the step-4 HARD-GATE). If upstream behavior leaks through (generic "Explore project context" instead of the targeted recon, or no research queries), the Tier 2 edits aren't loaded. See `docs/bonsai/tier-2-edits.md`.
 
 **Collision with upstream superpowers:** if you also have obra's `superpowers` plugin installed (either globally or via a marketplace), both will load and you'll see both sets of skills in `/help`. Because this fork is renamed to `bonsaipowers`, they coexist without namespace conflicts, but the duplicate skill list can be confusing. Uninstall the upstream copy while developing here if it gets in the way:
 
