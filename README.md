@@ -7,10 +7,11 @@
 In Claude Code:
 
 ```
-/plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git
+/plugin marketplace add BonsaiSoftware/bonsaipowers
+/plugin install bonsaipowers@bonsaipowers
 ```
 
-The default branch on GitHub is `bonsai-custom` — that's where all Bonsai customization lives. The `main` branch is a clean mirror of upstream `obra/superpowers` used only for syncing; **do not install from `main`**, you'll get upstream without our edits.
+The first command registers this repo as a marketplace; the second installs the plugin from it. The default branch on GitHub is `bonsai-custom` — that's where all Bonsai customization lives — so the marketplace fetches our fork, not upstream.
 
 To update:
 
@@ -34,10 +35,11 @@ Follow each MCP server's own install instructions. If any are missing, the relev
 
 ### Pinning to a specific version
 
-For critical work where you don't want surprise updates, pin to a tag:
+For critical work where you don't want surprise updates, pin to a tag by passing it as a ref when adding the marketplace:
 
 ```
-/plugin install git+https://github.com/BonsaiSoftware/bonsaipowers.git#v5.0.7
+/plugin marketplace add BonsaiSoftware/bonsaipowers@v5.0.7
+/plugin install bonsaipowers@bonsaipowers
 ```
 
 Current version lives in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Maintainers tag stable points on `bonsai-custom` when significant Tier 2 changes ship.
