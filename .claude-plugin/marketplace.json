@@ -1,19 +1,19 @@
 {
-  "name": "superpowers-dev",
-  "description": "Development marketplace for Superpowers core skills library",
+  "name": "bonsaipowers",
+  "description": "Bonsai Software fork of Superpowers: team-scoped skills, agents, commands, and hooks for Claude Code",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Bonsai Software",
+    "email": "claudius@bonsaisoftware.nl"
   },
   "plugins": [
     {
-      "name": "superpowers",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "name": "bonsaipowers",
+      "description": "Bonsai Software fork of Superpowers: TDD, debugging, collaboration patterns, and Bonsai-specific skills for Claude Code",
       "version": "5.0.7",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Bonsai Software",
+        "email": "claudius@bonsaisoftware.nl"
       }
     }
   ]
