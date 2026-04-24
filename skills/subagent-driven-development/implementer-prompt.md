@@ -1,5 +1,7 @@
 # Implementer Subagent Prompt Template
 
+<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — scope lockdown, shared-infra read-only, explicit staging, no-commit. See docs/bonsai/tier-2-edits.md. -->
+
 Use this template when dispatching an implementer subagent.
 
 ```
@@ -15,6 +17,28 @@ Task tool (general-purpose):
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]
+
+    ## Your File Scope
+
+    You MAY read any file in the repo. You MUST NOT write, create, or delete files
+    outside this list:
+
+    [CONTROLLER: Fill in from plan task's **Files:** block — Create / Modify / Test paths]
+
+    If you discover you need to touch a file not on this list, STOP and report
+    `BLOCKED: scope-expansion` with the filename and the reason. Do NOT silently
+    expand scope.
+
+    ## Shared Infrastructure (read-only for this task)
+
+    These files are shared with other tasks or other waves. You MUST treat them as
+    read-only for this task:
+
+    [CONTROLLER: Fill in from plan's **## Shared Infrastructure** section]
+
+    If a shared-infra file needs to change as part of this task, report
+    `BLOCKED: shared-infra` with the file and reason. The controller will schedule
+    a solo wave.
 
     ## Required Skills
 
@@ -41,9 +65,23 @@ Task tool (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Stage your work with explicit filenames (see Staging Rules below)
     5. Self-review (see below)
-    6. Report back
+    6. Report back with the exact list of files you staged
+
+    Do NOT commit. The controller commits at wave boundary.
+
+    ## Staging Rules
+
+    After implementing and running tests, stage your work with explicit filenames:
+
+        git add <file1> <file2> ...
+
+    Rules:
+    - You MUST stage ONLY files from your Your File Scope list.
+    - You MUST NOT use `git add -A`, `git add .`, or any glob form.
+    - You MUST NOT commit. The controller commits at wave boundary.
+    - When you report DONE, include the exact list of files you staged.
 
     ## Execution Constraints
 
@@ -134,11 +172,15 @@ Task tool (general-purpose):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
-    - Files changed
+    - **Staged files:** exact list of files you ran `git add` on
+    - Files changed (if different from staged — e.g., files you created and decided not to stage because out of scope)
     - Self-review findings (if any)
     - Any issues or concerns
 
     Use DONE_WITH_CONCERNS if you completed the work but have doubts about correctness.
-    Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
-    information that wasn't provided. Never silently produce work you're unsure about.
+    Use BLOCKED if you cannot complete the task (BLOCKED: scope-expansion if you need
+    to touch a file outside your scope; BLOCKED: shared-infra if a shared-infra file
+    needs to change; BLOCKED: other for anything else).
+    Use NEEDS_CONTEXT if you need information that wasn't provided.
+    Never silently produce work you're unsure about.
 ```
