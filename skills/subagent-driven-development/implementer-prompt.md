@@ -78,7 +78,7 @@ Task tool (general-purpose):
         git add <file1> <file2> ...
 
     Rules:
-    - You MUST stage ONLY files from your Your File Scope list.
+    - You MUST stage ONLY files listed in your `## Your File Scope` section.
     - You MUST NOT use `git add -A`, `git add .`, or any glob form.
     - You MUST NOT commit. The controller commits at wave boundary.
     - When you report DONE, include the exact list of files you staged.
