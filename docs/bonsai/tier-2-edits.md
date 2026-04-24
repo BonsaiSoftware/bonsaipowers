@@ -315,7 +315,10 @@ If any of these are missing, confirm `<!-- BONSAI TIER-2 EDIT: speed-mode parall
 ### 2026-04-24 — subagent-driven-development: wave-based controller loop with parallel dispatch + wave commit + bisect protocol
 
 **File:** `skills/subagent-driven-development/SKILL.md`
-**Marker:** `<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — see docs/bonsai/tier-2-edits.md -->` (one HTML marker above the new Wave-Based Controller Loop section; plus one DOT-comment marker `// BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — wave-based graph replaces per-task serial graph. See docs/bonsai/tier-2-edits.md.` inside the rebuilt DOT flowchart, which supersedes the prior `// BONSAI TIER-2 EDIT: optional bonsai-verify-ui breadcrumb` DOT comment)
+**Markers (two):**
+- HTML marker above the new Wave-Based Controller Loop section: `<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — new wave-based loop replaces the per-task serial loop. See docs/bonsai/tier-2-edits.md. -->`
+- DOT-comment marker inside the rebuilt DOT flowchart (supersedes the prior `// BONSAI TIER-2 EDIT: optional bonsai-verify-ui breadcrumb` comment): `// BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — wave-based graph replaces per-task serial graph. See docs/bonsai/tier-2-edits.md.`
+
 **Commit:** `8c6ea75`
 
 **What changed:** Four coordinated changes to the subagent-driven-development skill:
