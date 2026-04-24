@@ -43,45 +43,46 @@ digraph when_to_use {
 digraph process {
     rankdir=TB;
 
-    subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer subagent asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
-        "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
-        "Code quality reviewer subagent approves?" [shape=diamond];
-        "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete in TodoWrite" [shape=box];
+    "Read plan, extract tasks,\nload Required Skills,\ncreate TodoWrite" [shape=box style=filled fillcolor=lightyellow];
+    "Extract next wave" [shape=box];
+    "Pre-dispatch checks:\nworking tree clean,\nfile-disjoint,\nno shared-infra in multi-task wave" [shape=box style=filled fillcolor=lightyellow];
+    "Checks pass?" [shape=diamond];
+    "Split wave and report" [shape=box];
+
+    subgraph cluster_wave {
+        label="Per Wave (parallel dispatch)";
+        "Dispatch N implementers in ONE message\n(one Task/Agent call per task)" [shape=box style=filled fillcolor=lightyellow];
+        "All implementers return DONE?" [shape=diamond];
+        "Handle BLOCKED / NEEDS_CONTEXT" [shape=box];
+        "Dispatch N spec reviewers in ONE message\n(one per task, scoped diff)" [shape=box style=filled fillcolor=lightyellow];
+        "All spec reviewers OK?" [shape=diamond];
+        "Re-dispatch offending implementer\nto fix; re-review only that task" [shape=box];
+        "Wave-boundary commit:\nreset, re-stage declared files,\nverify scope, run tests, commit" [shape=box style=filled fillcolor=lightyellow];
     }
 
-    "Read plan, extract tasks,\nload Required Skills,\ncreate TodoWrite" [shape=box style=filled fillcolor=lightyellow];
-    "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "More waves remain?" [shape=diamond];
+    "Dispatch final code reviewer over full branch diff" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract tasks,\nload Required Skills,\ncreate TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    // BONSAI TIER-2 EDIT: optional bonsai-verify-ui breadcrumb — dashed edge + lightyellow node. See "Optional Runtime Verification (Bonsai)" section marker further down for full description.
-    "Dispatch final code reviewer subagent for entire implementation" -> "Optional: /clear + invoke bonsai-verify-ui\n(runtime UI verification)" [style=dashed, color=gray50];
+    "Read plan, extract tasks,\nload Required Skills,\ncreate TodoWrite" -> "Extract next wave";
+    "Extract next wave" -> "Pre-dispatch checks:\nworking tree clean,\nfile-disjoint,\nno shared-infra in multi-task wave";
+    "Pre-dispatch checks:\nworking tree clean,\nfile-disjoint,\nno shared-infra in multi-task wave" -> "Checks pass?";
+    "Checks pass?" -> "Split wave and report" [label="no"];
+    "Split wave and report" -> "Extract next wave";
+    "Checks pass?" -> "Dispatch N implementers in ONE message\n(one Task/Agent call per task)" [label="yes"];
+    "Dispatch N implementers in ONE message\n(one Task/Agent call per task)" -> "All implementers return DONE?";
+    "All implementers return DONE?" -> "Handle BLOCKED / NEEDS_CONTEXT" [label="no"];
+    "Handle BLOCKED / NEEDS_CONTEXT" -> "Dispatch N implementers in ONE message\n(one Task/Agent call per task)" [label="retry / split"];
+    "All implementers return DONE?" -> "Dispatch N spec reviewers in ONE message\n(one per task, scoped diff)" [label="yes"];
+    "Dispatch N spec reviewers in ONE message\n(one per task, scoped diff)" -> "All spec reviewers OK?";
+    "All spec reviewers OK?" -> "Re-dispatch offending implementer\nto fix; re-review only that task" [label="no"];
+    "Re-dispatch offending implementer\nto fix; re-review only that task" -> "Dispatch N spec reviewers in ONE message\n(one per task, scoped diff)" [label="re-review"];
+    "All spec reviewers OK?" -> "Wave-boundary commit:\nreset, re-stage declared files,\nverify scope, run tests, commit" [label="yes"];
+    "Wave-boundary commit:\nreset, re-stage declared files,\nverify scope, run tests, commit" -> "More waves remain?";
+    "More waves remain?" -> "Extract next wave" [label="yes"];
+    "More waves remain?" -> "Dispatch final code reviewer over full branch diff" [label="no"];
+    // BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — wave-based graph replaces per-task serial graph. See docs/bonsai/tier-2-edits.md.
+    "Dispatch final code reviewer over full branch diff" -> "Optional: /clear + invoke bonsai-verify-ui\n(runtime UI verification)" [style=dashed, color=gray50];
     "Optional: /clear + invoke bonsai-verify-ui\n(runtime UI verification)" [shape=box style=filled fillcolor=lightyellow];
     "Optional: /clear + invoke bonsai-verify-ui\n(runtime UI verification)" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -98,6 +99,54 @@ After reading the plan and extracting tasks:
 The controller is disciplined, not curious. Everything the subagents need should already be in the plan. The only external tool use you authorize for implementers is verifying an API signature — one context7 call, not an investigation.
 
 <!-- BONSAI TIER-2 EDIT: Controller setup section (skill loading + prompt injection), implementer-prompt.md additions (Required Skills, JIT context7, security gates, best-practices compliance), and spec-reviewer-prompt.md addition (OWASP verification) are team-specific additions not in upstream. On upstream merge, ensure all three files keep these additions. -->
+
+## Wave-Based Controller Loop
+
+After Controller Setup, the controller processes the plan **wave by wave**, not task by task. Implementers within a wave run in parallel; waves run sequentially.
+
+<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — new wave-based loop replaces the per-task serial loop. See docs/bonsai/tier-2-edits.md. -->
+
+### Per-wave flow
+
+**1. Extract wave tasks** from the plan's `## Waves` section.
+
+**2. Pre-dispatch checks** (ALL must pass before any `Task`/`Agent` call):
+
+- `git status --porcelain` returns empty. Working tree MUST be clean. If not, a previous wave bailed out or a stray write escaped detection — STOP and escalate.
+- Pairwise-disjoint assertion on each task's declared `Files:`. If two tasks share a file, split the wave into sub-waves and report the split. Do NOT dispatch into a corrupt state.
+- Shared-infrastructure assertion: no task in a multi-task wave declares a file that appears in the plan's `## Shared Infrastructure` list. If any does, split the wave so the shared-infra task runs solo.
+- Branch safety: current branch is NOT `main` or `master` without explicit user consent.
+
+**3. Dispatch N implementers in ONE message.** Construct a single controller message containing N parallel `Task`/`Agent` tool-use blocks — one per task in the wave. Each prompt uses `./implementer-prompt.md` filled in with the task's text, its declared `Files:` list, and the plan's `## Shared Infrastructure` list.
+
+Note on tool name: Claude Code SDK versions vary. Older versions emit `Task`, current versions emit `Agent`. Either works. Do not dispatch sequentially and do not split the dispatch across multiple controller messages — parallelism only works when all N calls live in the same message.
+
+**4. Collect implementer results.** All implementers must return `DONE` or `DONE_WITH_CONCERNS` before proceeding.
+
+- `BLOCKED: scope-expansion` — the implementer wanted to write a file outside its declared scope. Split that task into a follow-up solo wave with the expanded scope; the rest of the current wave's work stays staged.
+- `BLOCKED: shared-infra` — the implementer hit a shared-infra file. Same treatment: follow-up solo wave.
+- `BLOCKED: other` or `NEEDS_CONTEXT` — follow existing escalation rules (see `## Handling Implementer Status`).
+
+**5. Dispatch N spec reviewers in ONE message.** One parallel spec-reviewer per task, each using `./spec-reviewer-prompt.md` with a scoped diff command (`git diff --staged -- <task's declared files>`). Review loops happen per-task and in parallel — if one returns ❌, re-dispatch just that task's implementer to fix while other spec reviewers finish.
+
+**6. Wave-boundary commit.** After all spec reviewers return ✅:
+
+- `git reset` (unstage everything).
+- For each task in the wave: `git add <file1> <file2> …` — stage ONLY the declared files by explicit name. Belt-and-braces protection against an implementer that wrote outside scope without self-reporting.
+- `git diff --cached --name-only` — verify the staged file set equals the union of declared files. Any extra OR missing file is a failure condition; escalate.
+- Run the full project test suite (command from `CLAUDE.md` or `package.json`'s `test` script). Wave-boundary test gate catches cross-task regressions.
+- If tests fail but each task's individual tests passed, bisect: unstage one task at a time and re-run until the offender is found; dispatch a fix subagent scoped to that task's files.
+- Create a single commit: `feat(wave-N): <comma-separated task titles>`. For solo waves: `feat(solo): <task title>`. The implementer never commits — the controller does.
+
+**7. Advance to next wave.** Go back to step 1.
+
+### End of feature
+
+After all waves commit: dispatch one final code-quality reviewer over the full branch diff (`git diff <base-branch>...HEAD`). Then hand off to `superpowers:finishing-a-development-branch`. The optional `bonsai-verify-ui` breadcrumb still applies for UI work.
+
+### Speed-mode vs careful-mode
+
+The default flow is **speed-mode** (above). A plan may specify `**Flow:** careful-mode` in its header to request the legacy per-task serial flow (implementer → spec review → code-quality review → commit, repeat). Careful-mode is appropriate for production hotfixes, security-critical changes, or any work where per-task quality review is worth the wall-clock cost. If the plan header omits `**Flow:**`, assume speed-mode.
 
 ## Model Selection
 
@@ -239,7 +288,7 @@ config tweaks. Use your judgment — if a user could observe the change in a bro
 **vs. Manual execution:**
 - Subagents follow TDD naturally
 - Fresh context per task (no confusion)
-- Parallel-safe (subagents don't interfere)
+- Wave-based parallelism (file-disjoint tasks dispatch concurrently; wave boundaries enforce state consistency)
 - Subagent can ask questions (before AND during work)
 
 **vs. Executing Plans:**
@@ -272,7 +321,6 @@ config tweaks. Use your judgment — if a user could observe the change in a bro
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
@@ -281,6 +329,11 @@ config tweaks. Use your judgment — if a user could observe the change in a bro
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Create git worktrees without explicit user request (speed-mode uses a single checkout)
+- Switch branches without explicit user request (the flow never switches branches)
+- Use git add -A or git add . inside an implementer subagent (stage by explicit filename only)
+- Let implementers commit (controller commits at wave boundary)
+- Dispatch implementers across waves concurrently (waves are sequential; only tasks within a wave run in parallel)
 
 **If subagent asks questions:**
 - Answer clearly and completely
