@@ -253,6 +253,7 @@ If any of these are still present after a merge, the removal was partially rever
 **Marker:** `<!-- BONSAI TIER-2 EDIT: "Optional Runtime Verification" section, corresponding DOT flowchart node (dashed edge + lightyellow fill), and Integration "Optional downstream" entry for bonsai-verify-ui. On upstream merge, ensure all three survive. -->`
 **Commit:** `c2d9442`
 
+
 **What changed:** Five coordinated additions to `skills/subagent-driven-development/SKILL.md`, covered by two marker comments (a section-level marker above the Optional Runtime Verification section, and an adjacent `// BONSAI TIER-2 EDIT` comment inside the DOT block for merge-conflict visibility):
 
 1. **New `## Optional Runtime Verification (Bonsai)` section** inserted between `## Example Workflow` and `## Advantages`. Tells the implementer that after the final code reviewer approves, they MAY `/clear` the session and invoke the `bonsai-verify-ui` skill to runtime-verify the UI in Chrome via MCP. Explicit guidance on when to skip (backend-only, config, docs).
@@ -279,5 +280,110 @@ The merge-conflict cost is deliberately minimized: the entire footprint is one s
 4. Run a real subagent-driven-development flow end-to-end on a small UI feature. After the final code reviewer reports ✅, confirm the agent mentions the optional runtime verification breadcrumb in its summary (i.e., actually tells the user they can `/clear` and invoke `bonsai-verify-ui`).
 
 If the marker, section, flowchart node, or integration entry is missing after an upstream merge, the merge-conflict resolution clobbered intentional Bonsai additions. Re-read this manifest entry and restore all five changes.
+
+---
+
+### 2026-04-24 — writing-plans: add speed-mode plan format (Dependency Graph, Shared Infrastructure, Waves, Flow field, 3-step task template)
+
+**File:** `skills/writing-plans/SKILL.md`
+**Marker:** `<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — see docs/bonsai/tier-2-edits.md -->` (two occurrences — after Plan Document Header template, after the new Speed-Mode Plan Sections)
+**Commit:** `b7b7ab7`
+
+**What changed:** Five additions to the writing-plans skill that establish a new default plan format ("speed-mode"):
+
+1. **New `**Flow:**` field** in the Plan Document Header template, values `speed-mode` (default) or `careful-mode` (legacy per-task serial flow).
+2. **New `## Speed-Mode Plan Sections`** top-level section inserted between Plan Document Header and Task Structure, containing three subsections:
+   - `## Dependency Graph` — flat `blockedBy` listing per task.
+   - `## Shared Infrastructure` — files that force solo-wave execution (package.json, lockfiles, root configs, migration dirs, barrel exports, NestJS root composition, CI files).
+   - `## Waves` — computed by planner from graph + shared-infra list; one subsection per wave.
+3. **New `**Wave:** N` per-task field** in the Task Structure template.
+4. **New `### Speed-Mode Task Template`** subsection inside Task Structure — collapses the 5-step TDD template (test/verify-fail/impl/verify-pass/commit) to 3 steps (test+impl together / verify pass / stage). Commit step is removed — the controller commits at wave boundary.
+5. **Updated `## Bite-Sized Task Granularity`** to show both careful-mode and speed-mode step lists.
+
+**Why:** Speed-mode is the new Bonsai default flow, aimed at 3-5× wall-clock reduction on feature implementations via parallel implementers, parallel spec reviewers, and commit-per-wave. The plan format needs explicit graph + wave + shared-infra data so the controller can parallelize safely without worktree isolation (hard user constraint). The 3-step task template removes the per-step commit overhead and the explicit red-green split — both retained as correctness anchors are the JIT context7 verification and the final test-run-before-commit gate. Careful-mode is kept as an escape hatch for production hotfixes and security-critical work.
+
+**Verification:** In a fresh session, brainstorm a small feature and run writing-plans. Confirm the generated plan has:
+1. `**Flow:** speed-mode` in the header.
+2. `## Dependency Graph`, `## Shared Infrastructure`, and `## Waves` sections populated.
+3. Per-task `**Wave:** N` field.
+4. Task steps following the 3-step speed-mode template (test+impl / verify / stage), NOT the 5-step legacy template.
+5. No per-task commit step in the task template (controller commits at wave boundary).
+If any of these are missing, confirm `<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) -->` markers survived the most recent upstream merge and re-apply the section additions.
+
+---
+
+### 2026-04-24 — subagent-driven-development: wave-based controller loop with parallel dispatch + wave commit + bisect protocol
+
+**File:** `skills/subagent-driven-development/SKILL.md`
+**Marker:** `<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — see docs/bonsai/tier-2-edits.md -->` (one HTML marker above the new Wave-Based Controller Loop section; plus one DOT-comment marker `// BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — wave-based graph replaces per-task serial graph. See docs/bonsai/tier-2-edits.md.` inside the rebuilt DOT flowchart, which supersedes the prior `// BONSAI TIER-2 EDIT: optional bonsai-verify-ui breadcrumb` DOT comment)
+**Commit:** `8c6ea75`
+
+**What changed:** Four coordinated changes to the subagent-driven-development skill:
+
+1. **The DOT flowchart for `## The Process`** replaced with a wave-based version. Previous graph had a `cluster_per_task` subgraph showing implementer → spec review → code-quality review sequence per task. New graph has a `cluster_wave` subgraph showing pre-dispatch checks → parallel N-implementer dispatch → parallel N-spec-reviewer dispatch → wave-boundary commit, with waves running sequentially. A `// BONSAI TIER-2 EDIT: ...` DOT comment is placed inside the graph block for merge-conflict visibility. **Note on label text:** the "spec reviewer result" diamond node uses the label `"All spec reviewers OK?"` rather than the design-doc's `"All spec reviewers ✅?"`; this was a deliberate ASCII-robustness choice made at dispatch time, both labels are semantically equivalent, and the rest of the skill body still uses ✅/❌ in prose.
+2. **New `## Wave-Based Controller Loop` section** inserted between `## Controller Setup` and `## Model Selection`. Contains:
+   - Per-wave flow steps 1-7: extract wave, pre-dispatch checks (clean working tree, pairwise-disjoint Files, shared-infra assertion, branch safety), parallel implementer dispatch in one message, collect results with BLOCKED handling, parallel spec reviewer dispatch, wave-boundary commit protocol (reset → re-stage declared files → verify scope → run tests → bisect if failure → one commit), advance.
+   - End-of-feature flow: one final code-quality reviewer over full branch diff → finishing-a-development-branch → optional bonsai-verify-ui.
+   - Speed-mode vs careful-mode flow-selection note.
+3. **`## Red Flags` `**Never:**` list updated:**
+   - REMOVED: `Dispatch multiple implementation subagents in parallel (conflicts)` — inverted under speed-mode, protected by file-scope discipline instead of a blanket prohibition.
+   - ADDED: `Create git worktrees without explicit user request`; `Switch branches without explicit user request`; `Use git add -A or git add . inside an implementer subagent`; `Let implementers commit`; `Dispatch implementers across waves concurrently`.
+4. **`## Advantages` `**vs. Manual execution:**`** — replaced the bullet `Parallel-safe (subagents don't interfere)` with `Wave-based parallelism (file-disjoint tasks dispatch concurrently; wave boundaries enforce state consistency)`.
+
+**Why:** Speed-mode converts the controller from a per-task serial orchestrator into a wave-based parallel orchestrator. The prior red flag against parallel dispatch was correct under the old model (no file-scope discipline, no wave boundaries) and is wrong under the new one — we now dispatch N implementers in a single message protected by pre-dispatch disjointness checks. The new red flags encode the user's hard constraints (no worktrees, no branch switches) and the new staging/commit discipline. Commit-per-wave collapses what used to be 3N commits per feature into W (wave count), typically ~2-5× reduction. Cross-task regressions are caught at the wave-boundary test gate rather than leaking into the next wave.
+
+**Verification:** In a fresh session with a small multi-task plan:
+1. Render the `## The Process` DOT graph (or read the block) and confirm `cluster_wave` subgraph with pre-dispatch checks and parallel dispatch nodes, NOT `cluster_per_task`.
+2. Execute the plan and observe the controller message containing multiple parallel `Task`/`Agent` tool-use blocks within a single turn for each wave's implementers (and again for the spec reviewers).
+3. `git log --oneline` shows one commit per wave, not one per task.
+4. `git worktree list` shows no new worktrees.
+5. No `git checkout -b`, `git switch -c`, `git checkout <branch>`, or `git switch <branch>` commands execute.
+6. `## Red Flags` section contains all five new bullets and does NOT contain `Dispatch multiple implementation subagents in parallel (conflicts)`.
+If any of these regress, confirm all BONSAI TIER-2 markers (both the DOT block marker and the Wave-Based Controller Loop marker, plus the preserved older markers for controller setup and bonsai-verify-ui) survived the most recent upstream merge.
+
+---
+
+### 2026-04-24 — implementer-prompt: scope lockdown, shared-infra read-only, explicit staging, no-commit, staged-files reporting
+
+**File:** `skills/subagent-driven-development/implementer-prompt.md`
+**Marker:** `<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — scope lockdown, shared-infra read-only, explicit staging, no-commit. See docs/bonsai/tier-2-edits.md. -->`
+**Commit:** `28b45d9` (typo fix `debd911`)
+
+**What changed:** Five coordinated template additions/edits to the implementer subagent prompt:
+
+1. **New `## Your File Scope` section** — controller fills in from plan task's `**Files:**` block; implementer forbidden from writing outside the list; `BLOCKED: scope-expansion` escalation path documented.
+2. **New `## Shared Infrastructure (read-only for this task)` section** — controller fills in from plan's `## Shared Infrastructure`; implementer treats these files as read-only; `BLOCKED: shared-infra` escalation path documented.
+3. **New `## Staging Rules` section** — requires explicit `git add <file1> <file2>`; forbids `git add -A` and `git add .`; forbids committing (controller commits at wave boundary); requires reporting the exact staged-file list.
+4. **`## Your Job` list rewritten** — removed step "4. Commit your work"; replaced with "4. Stage your work with explicit filenames"; added a trailing "Do NOT commit. The controller commits at wave boundary." note.
+5. **`## Report Format` expanded** — added `**Staged files:**` field requiring the exact list of files passed to `git add`; documented the two new BLOCKED reason codes (`scope-expansion`, `shared-infra`) alongside existing `other`.
+
+**Note on fence nesting:** the inner `git add` example in `## Staging Rules` uses an 8-space-indented code block (4 for outer template indent + 4 for code) rather than a triple-backtick fence, to avoid prematurely closing the outer prompt-template fence. Same convention applied in `spec-reviewer-prompt.md` (Task 4 below). Follow-up fixup commit `debd911` corrected a "your Your File Scope list" typo in the Staging Rules bullet to "listed in your `## Your File Scope` section".
+
+**Why:** Speed-mode dispatches N implementers concurrently into the same checkout. Without file-scope discipline, two parallel implementers can silently corrupt each other's work via stray writes outside declared scope or via `git add -A`-style broad staging. This prompt encodes the discipline at the implementer level. The controller also enforces scope via re-staging from declared filenames at wave-boundary commit (belt-and-braces), but the implementer-side constraints surface violations earlier (as `BLOCKED: scope-expansion` reports) rather than being caught by the controller's diff inspection later.
+
+**Verification:** In a fresh session, execute a small speed-mode plan. For a typical task:
+1. The implementer prompt has `## Your File Scope`, `## Shared Infrastructure (read-only for this task)`, and `## Staging Rules` sections populated from the plan.
+2. The implementer reports `**Staged files:** <list>` in its DONE report.
+3. The implementer never runs `git add -A` or `git add .` (grep the transcript; should find zero occurrences from the implementer).
+4. The implementer never runs `git commit` (same check).
+5. If a task is authored to deliberately require touching an out-of-scope file, the implementer reports `BLOCKED: scope-expansion` rather than silently expanding.
+If any of these regress, confirm the marker survived the most recent upstream merge.
+
+---
+
+### 2026-04-24 — spec-reviewer-prompt: scoped diff review limits reviewer to the task's declared files
+
+**File:** `skills/subagent-driven-development/spec-reviewer-prompt.md`
+**Marker:** `<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — scoped diff review. See docs/bonsai/tier-2-edits.md. -->`
+**Commit:** `3fb703e`
+
+**What changed:** One template addition: a new `## Review Scope` section inserted between `## What Implementer Claims They Built` and `## CRITICAL: Do Not Trust the Report`. The section provides a `git diff --staged -- <file1> <file2> ...` command template (filled in by controller from the plan's Files block) and instructs the reviewer to review only that scope. Changes outside the declared scope are flagged as a scope violation (❌). The inner `git diff` block uses 8-space indentation to avoid nesting triple-backticks inside the outer prompt-template fence (same convention as Task 3).
+
+**Why:** Speed-mode runs spec reviewers in parallel per wave. A reviewer that reads outside its scope will: (a) review files that other reviewers are already covering (wasted work, conflicting reports), and (b) potentially block the wave commit on issues that other tasks are responsible for. Scoping the diff keeps parallel reviewers independent. The scope-violation flag doubles as a second line of defense — if an implementer silently expanded scope past the controller's detection (unlikely but possible), the spec reviewer catches it via the diff inspection.
+
+**Verification:** In a fresh session, execute a small speed-mode plan with 2 parallel tasks per wave:
+1. Each spec reviewer's prompt has a `## Review Scope` section with a specific `git diff --staged -- <files>` command.
+2. Each reviewer reports only on its task's files — no cross-task comments.
+3. If an implementer silently writes to a file outside its scope, the spec reviewer flags the scope violation.
 
 ---
