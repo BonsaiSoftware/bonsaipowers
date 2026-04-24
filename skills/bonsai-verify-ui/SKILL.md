@@ -6,15 +6,16 @@ description: Use when runtime-verifying a web UI in a fresh /clear'ed session af
 # bonsai-verify-ui
 
 Runtime UI verification for work completed by `superpowers:subagent-driven-development`. Runs
-in a fresh `/clear`ed session, reads spec + plan + git diff from disk, spawns a sonnet subagent
-to generate a YAML test plan, executes the plan via Chrome DevTools MCP in the main context,
-diagnoses failures via parallel sonnet subagents, and writes a report to
+in a fresh `/clear`ed session, reads spec + plan + git diff from disk, spawns a Sonnet subagent
+to generate a YAML test plan, spawns a second Sonnet subagent to execute the plan via Chrome
+DevTools MCP, diagnoses failures via parallel Sonnet subagents, and writes a report to
 `docs/superpowers/verify/`.
 
-**Core principle:** fresh session + disk-only inputs + main-context browser control = verification
-that is independent of whatever the implementer believed they built. The browser must be driven
-by exactly one agent (the main orchestrator) to avoid parallel-agent contention documented in
-Chrome's 2026 multi-agent guidance.
+**Core principle:** fresh session + disk-only inputs + single-subagent browser control =
+verification that is independent of whatever the implementer believed they built. The browser
+must be driven by exactly one agent — during Phase 3 this is a Sonnet subagent, during Phase 1
+it is the main orchestrator for the one-shot connection precheck — to avoid parallel-agent
+contention documented in Chrome's 2026 multi-agent guidance.
 
 **No auto-fix.** Verification exposes problems and diagnoses root causes. The human decides the
 next step (debug manually, re-dispatch to a fix pass, revert).
@@ -38,9 +39,10 @@ next step (debug manually, re-dispatch to a fix pass, revert).
 - `test-planner-agent.md` — protocol for the sonnet test-planner subagent
 - `chrome-devtools-execution-patterns.md` — assertion-type → MCP tool lookup table
 
-Both files are read at runtime:
-- `test-planner-agent.md` is passed to the sonnet subagent via `<files_to_read>` in Phase 2
-- `chrome-devtools-execution-patterns.md` is read by the main orchestrator in Phase 3
+Both files are read at runtime by Sonnet subagents:
+- `test-planner-agent.md` is passed to the Phase 2 planner subagent via `<files_to_read>`
+- `chrome-devtools-execution-patterns.md` is passed to the Phase 3 executor subagent via
+  `<files_to_read>`
 
 ## The Process
 
@@ -55,7 +57,7 @@ digraph process {
     "Valid YAML?" [shape=diamond];
     "Retry or abort" [shape=diamond];
     "Abort: report to user" [shape=doublecircle];
-    "Phase 3: Test execution\n(main context, chrome-devtools MCP)" [shape=box];
+    "Phase 3: Test execution\n(sonnet subagent, chrome-devtools MCP)" [shape=box];
     "Any FAIL?" [shape=diamond];
     "Phase 4a: Diagnose failures\n(parallel sonnet subagents)" [shape=box];
     "Phase 4b: Write report, commit" [shape=box];
@@ -68,8 +70,8 @@ digraph process {
     "Valid YAML?" -> "Retry or abort" [label="no"];
     "Retry or abort" -> "Phase 2: Test plan generation\n(sonnet subagent, Task tool)" [label="retry < 2"];
     "Retry or abort" -> "Abort: report to user" [label="retries exhausted"];
-    "Valid YAML?" -> "Phase 3: Test execution\n(main context, chrome-devtools MCP)" [label="yes"];
-    "Phase 3: Test execution\n(main context, chrome-devtools MCP)" -> "Any FAIL?";
+    "Valid YAML?" -> "Phase 3: Test execution\n(sonnet subagent, chrome-devtools MCP)" [label="yes"];
+    "Phase 3: Test execution\n(sonnet subagent, chrome-devtools MCP)" -> "Any FAIL?";
     "Any FAIL?" -> "Phase 4a: Diagnose failures\n(parallel sonnet subagents)" [label="yes"];
     "Phase 4a: Diagnose failures\n(parallel sonnet subagents)" -> "Phase 4b: Write report, commit";
     "Any FAIL?" -> "Phase 4b: Write report, commit" [label="no"];
@@ -191,42 +193,119 @@ where user describes tests`, `abort`.
 
 ## Phase 3: Test Execution
 
-Main context runs the test plan. Deterministic loop over tests, no model calls, no subagents.
-All tool calls are `mcp__chrome-devtools__*`.
+Dispatch **one** Sonnet subagent via the `Task` tool. The subagent owns Chrome DevTools MCP
+for the full duration of test execution — it is the sole browser driver during this phase. The
+main orchestrator makes **zero** `mcp__chrome-devtools__*` calls while the subagent runs.
 
-**Read `chrome-devtools-execution-patterns.md` at the start of this phase** — it is
-the lookup table for everything this phase does.
+**Why a Sonnet subagent instead of main context:**
+- Test execution is mechanical (navigate, assert, record) and well-specified by the patterns
+  file. Sonnet handles deterministic loop execution reliably at lower cost than keeping Opus
+  in the loop for hundreds of tool calls.
+- Chrome DevTools MCP does not tolerate concurrent drivers. Exactly one agent holds the
+  browser at a time, so parallel dispatch is not an option for this phase.
+- The subagent's inputs are pass-by-value (test plan + patterns file + connected page id) —
+  no shared conversation state is needed.
 
-**Per-test flow:**
+**Dispatch prompt:**
 
-1. **Dependency skip** — if any `depends_on` id has status FAIL, mark this test SKIP
-2. **Auth setup if needed** — if `test.requires_auth: true` AND auth setup has not yet run AND
-   `auth.required: true` in the plan, run the auth setup sequence from
-   `chrome-devtools-execution-patterns.md § Auth Setup`. If auth setup fails, mark this test
-   and all subsequent auth-required tests SKIP with reason `"auth setup failed"`.
-3. **Navigate** — `mcp__chrome-devtools__navigate_page(base_url + test.url)`
-4. **Wait** — `mcp__chrome-devtools__wait_for(test.wait_for)` with 5s timeout, or 2s pause if
-   `wait_for` is null
-5. **Setup actions** — for each action in `test.setup_actions`, call the matching
-   `mcp__chrome-devtools__*` tool from the Setup Action Mapping table. 500ms pause after each.
-6. **Assertions** — for each assertion, use the Assertion Type Mapping table to call the right
-   tool and evaluate the result
-7. **Evidence** — `mcp__chrome-devtools__take_screenshot`. On FAIL, also
-   `list_console_messages` + `list_network_requests`.
-8. **Record** — append to `TEST_RESULTS` array with `{id, name, url, status, assertions,
-   evidence_uri, console_errors?, failed_requests?}`
-9. **Progress** — print one line to the user: `Test {i}/{N}: {name} — {PASS|FAIL|SKIP}`
+```
+Task tool (general-purpose):
+  description: "Execute runtime test plan via Chrome DevTools MCP"
+  model: sonnet
+  prompt: |
+    <objective>
+    Execute every test in the <test_plan> block against the connected Chrome
+    browser using mcp__chrome-devtools__* tools. Return exactly one
+    <test_results> YAML block — no prose, no markdown outside the block.
+    </objective>
 
-**Error recovery** is defined in `chrome-devtools-execution-patterns.md § Error Recovery`. Key
-rules:
-- MCP tool failure → wait 2s, retry once, then mark FAIL and continue
-- 3 consecutive test FAILs → stop execution, mark rest SKIPPED, proceed to Phase 4
-- Navigation timeout → mark FAIL, continue
-- Selector not found → take snapshot as evidence, mark assertion FAIL, continue
+    <agent_instructions>
+    Read skills/bonsai-verify-ui/chrome-devtools-execution-patterns.md FIRST.
+    It is the authoritative lookup table for every tool call, assertion type,
+    setup action, evidence collection step, and error-recovery path you need.
+    Do not improvise outside it.
 
-**Console noise filter** is defined in `chrome-devtools-execution-patterns.md § Console
-Message Filtering`. Never ignore hydration warnings, `console.error` from app code, or failed
-`fetch` responses.
+    Start by calling mcp__chrome-devtools__select_page with connected_page_id.
+    If that fails, call mcp__chrome-devtools__new_page with base_url. If both
+    fail, return the results YAML with every test marked SKIP (skip_reason
+    "chrome disconnected") and stopped_early: true.
+
+    Execute tests sequentially in the given order. Never parallelize tool
+    calls — the browser is single-threaded. After each test, print ONE
+    progress line to stdout:
+
+      Test {i}/{N}: {name} — {PASS|FAIL|SKIP}
+
+    Do not diagnose, fix, or retry failures beyond the retry rules in the
+    patterns file (Error Recovery section). Record the facts. Move on.
+    </agent_instructions>
+
+    <context>
+    base_url: {base_url}
+    connected_page_id: {connected_page_id}
+    </context>
+
+    <files_to_read>
+    - skills/bonsai-verify-ui/chrome-devtools-execution-patterns.md
+    </files_to_read>
+
+    <test_plan>
+    {verbatim YAML block from Phase 2, including the <test_plan> tags}
+    </test_plan>
+
+    <output_format>
+    Return exactly one block:
+
+    <test_results>
+    auth_setup_status: PASS | FAIL | N/A
+    stopped_early: false
+    stopped_reason: null
+    tests:
+      - id: 1
+        name: "…"
+        url: "…"
+        status: PASS | FAIL | SKIP
+        skip_reason: "…"              # required if SKIP
+        assertions:
+          - type: element_exists
+            selector: "…"
+            expected: "…"
+            actual: "…"
+            status: PASS | FAIL
+        evidence_uri: "screenshot://…"
+        console_errors:               # only if FAIL
+          - "…"
+        failed_requests:              # only if FAIL
+          - method: GET
+            url: "…"
+            status: 500
+            message: "…"
+    </test_results>
+    </output_format>
+```
+
+**Parse and validate the returned `<test_results>` block.** Retry once (re-dispatch with
+the parse error appended to the prompt) if the YAML is invalid or the top-level `tests` list
+is missing. If the retry also fails, reconstruct best-effort results from whatever progress
+lines the subagent printed — mark any unreported test SKIP with reason
+`"executor returned malformed results"` — and proceed to Phase 4. Do not block the report on a
+bad serialization.
+
+**Early termination.** If the returned YAML has `stopped_early: true`, surface the reason to
+the user:
+
+```
+⚠ Test execution stopped early: {stopped_reason}
+   Restart the dev server / Chrome and re-run this skill to continue.
+```
+
+Do not automatically re-dispatch — dev-server state changes are user-visible actions.
+
+**Error recovery, console noise filter, and the per-test execution loop** are all defined in
+`chrome-devtools-execution-patterns.md`. The subagent follows them. The main orchestrator does
+not intervene during execution, does not second-guess pass/fail calls, and does not ignore
+hydration warnings, `console.error` from app code, or failed `fetch` responses when merging
+results.
 
 ## Phase 4: Report & Failure Diagnosis
 
@@ -390,8 +469,12 @@ Next steps (your choice):
 **Never:**
 - Run this skill from `main` or `master` branch
 - Proceed if Chrome DevTools MCP is not connected
-- Dispatch multiple subagents that all need chrome-devtools access (only the main orchestrator
-  drives the browser)
+- Dispatch multiple subagents that all need chrome-devtools access. Exactly one Sonnet
+  subagent drives the browser during Phase 3. Phase 4a diagnosis subagents read files only —
+  no chrome-devtools tools.
+- Have the main orchestrator make `mcp__chrome-devtools__*` calls during Phase 3 execution
+  (other than the Phase 1 connection precheck, and only if the user explicitly retries after
+  early termination). The Phase 3 subagent is the browser driver.
 - Auto-fix failures (the skill diagnoses, the human decides)
 - Amend or force-push the report commit
 - Ignore hydration warnings or `console.error` from app code in the noise filter

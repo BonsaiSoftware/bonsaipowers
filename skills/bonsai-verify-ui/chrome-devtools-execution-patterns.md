@@ -1,29 +1,60 @@
 # Chrome DevTools Execution Patterns
 
-Mechanical reference for the `bonsai-verify-ui` orchestrator during test execution (Phase 3).
-This is a lookup table — not an agent protocol — for the main Claude Code context running
-the test plan against a connected Chrome via the Chrome DevTools MCP server.
+Protocol and mechanical reference for the Phase 3 test executor subagent of `bonsai-verify-ui`.
+A Sonnet subagent reads this file at dispatch time and uses it as the authoritative source for
+the per-test execution loop, Chrome DevTools MCP tool selection, assertion evaluation, evidence
+collection, and error-recovery behavior. Follow it exactly.
+
+---
+
+## Per-Test Execution Loop
+
+For each test in the plan, in order, run these steps. No parallelization — the browser is
+single-threaded.
+
+1. **Dependency skip.** If any id in `test.depends_on` has status FAIL in the running
+   `TEST_RESULTS` array, mark this test SKIP with `skip_reason: "Depends on test #{id} which
+   failed"` and continue to the next test.
+2. **Auth setup if needed.** If `test.requires_auth: true` AND auth has not yet been set up
+   AND `auth.required: true` in the plan, run the auth setup sequence (see § Auth Setup). If
+   auth setup fails, record `auth_setup_status: FAIL`, mark this test and every subsequent
+   `requires_auth: true` test SKIP with `skip_reason: "auth setup failed"`, and continue.
+3. **Navigate.** `mcp__chrome-devtools__navigate_page(base_url + test.url)`.
+4. **Wait.** `mcp__chrome-devtools__wait_for(test.wait_for)` with a 5s timeout. If
+   `test.wait_for` is null, pause 2 seconds instead.
+5. **Setup actions.** For each action in `test.setup_actions`, call the matching tool from the
+   § Setup Action Mapping table. Pause 500ms after each action (or call `wait_for` on the next
+   expected selector if more deterministic).
+6. **Assertions.** For each assertion, use § Assertion Type Mapping to select the right tool
+   and evaluate the result. Record `status: PASS | FAIL`, `actual` value, and keep the
+   `selector`/`expected`/`type` fields from the plan.
+7. **Evidence.** Call `mcp__chrome-devtools__take_screenshot` after the last assertion. Store
+   the returned resource URI in `evidence_uri`. On any FAIL assertion, additionally call
+   `mcp__chrome-devtools__list_console_messages` and `mcp__chrome-devtools__list_network_requests`
+   (see § Evidence Collection).
+8. **Record.** Append `{id, name, url, status, skip_reason?, assertions, evidence_uri,
+   console_errors?, failed_requests?}` to `TEST_RESULTS`. Test `status` is PASS only when every
+   assertion is PASS; otherwise FAIL (or SKIP per step 1/2).
+9. **Progress.** Print one stdout line: `Test {i}/{N}: {name} — {PASS|FAIL|SKIP}`.
+
+After the loop ends, return the full `<test_results>` YAML block per the dispatch prompt's
+`<output_format>`.
 
 ---
 
 ## Connection Check
 
-Run once before any tests:
+The main orchestrator has already confirmed Chrome is reachable in Phase 1. At the start of
+Phase 3, the subagent re-selects the page to guarantee it's operating on the right target:
 
-```
-mcp__chrome-devtools__list_pages
-```
-
-**Pages returned:** Chrome is connected.
-  - If one page URL matches `base_url`: call `mcp__chrome-devtools__select_page` with that page's id.
-  - If no page matches `base_url`: call `mcp__chrome-devtools__new_page` with the base URL.
-**Error / empty list:** Chrome not connected. Stop and ask the user to:
-  1. Start dev server (`npm run dev` / `pnpm dev` / project-specific)
-  2. Start Chrome with `--remote-debugging-port=9222`
-  3. Re-run the skill in this same session
-
-Never proceed with runtime tests if Chrome isn't connected. There is no "static-only" fallback
-in this skill by design.
+1. Call `mcp__chrome-devtools__select_page` with the `connected_page_id` passed in the
+   dispatch `<context>` block.
+2. If `select_page` fails (page closed, invalid id), fall back to
+   `mcp__chrome-devtools__new_page(url=base_url)`.
+3. If both calls fail, return the `<test_results>` YAML with every test marked SKIP
+   (`skip_reason: "chrome disconnected"`), `auth_setup_status: N/A`, `stopped_early: true`,
+   and `stopped_reason: "chrome disconnected before execution"`. Do not attempt further tool
+   calls.
 
 ---
 
