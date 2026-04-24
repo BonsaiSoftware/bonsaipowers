@@ -1,5 +1,7 @@
 # Spec Compliance Reviewer Prompt Template
 
+<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — scoped diff review. See docs/bonsai/tier-2-edits.md. -->
+
 Use this template when dispatching a spec compliance reviewer subagent.
 
 **Purpose:** Verify implementer built what was requested (nothing more, nothing less)
@@ -17,6 +19,17 @@ Task tool (general-purpose):
     ## What Implementer Claims They Built
 
     [From implementer's report]
+
+    ## Review Scope
+
+    You are reviewing ONLY the files this task was scoped to. Use this diff command
+    as your primary source — do not read files outside the scope:
+
+        [CONTROLLER: Fill in from plan task's **Files:** block]
+        git diff --staged -- <file1> <file2> ...
+
+    If the diff shows changes to files you were not told to review, flag this as a
+    scope violation (❌) — the implementer wrote outside its declared scope.
 
     ## CRITICAL: Do Not Trust the Report
 
