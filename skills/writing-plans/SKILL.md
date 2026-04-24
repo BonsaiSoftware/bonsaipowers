@@ -71,11 +71,18 @@ This structure informs the task decomposition. Each task should produce self-con
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
+
+Careful-mode (5-step, per-task commits):
 - "Write the failing test" - step
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
 - "Commit" - step
+
+Speed-mode (3-step, commit per wave by controller):
+- "Write test + implementation" - step
+- "Run tests to verify pass" - step
+- "Stage declared files" - step
 
 ## Plan Document Header
 
@@ -94,8 +101,59 @@ This structure informs the task decomposition. Each task should produce self-con
 
 **Required Skills:** [Best-practices and security skills loaded during research, e.g. nestjs-best-practices, owasp-security]
 
+**Flow:** speed-mode (parallel waves, commit per wave) | careful-mode (sequential, commit per task)
+
 ---
 ```
+
+<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — see docs/bonsai/tier-2-edits.md -->
+
+## Speed-Mode Plan Sections
+
+Speed-mode plans (the Bonsai default) require three extra sections after the header and before the task list. Careful-mode plans may omit them.
+
+### `## Dependency Graph`
+
+One line per task, listing `blockedBy`. Task IDs are the task numbers used in the task list. Example:
+
+```
+- Task 1: (none)
+- Task 2: blockedBy [Task 1]
+- Task 3: blockedBy [Task 1]
+- Task 4: blockedBy [Task 2, Task 3]
+```
+
+### `## Shared Infrastructure`
+
+Files or directories that — if a task touches them — force that task to run solo in its own wave. The controller uses this list to split waves. Default inclusions the planner should always consider:
+
+- `package.json`, `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`
+- Root config: `tsconfig.json`, `.eslintrc*`, `prettier.config.*`, `vite.config.*`, `nest-cli.json`
+- Migration directories: `prisma/migrations/`, `src/**/migrations/`
+- Barrel exports identified for the feature (e.g. `src/index.ts`, `src/lib/index.ts`)
+- Global NestJS composition: root `app.module.ts`
+- CI files: `.github/workflows/*.yml`
+
+Add any feature-specific shared files — anything where concurrent edits would corrupt state.
+
+### `## Waves`
+
+Computed by the planner from the graph + shared-infra list. One subsection per wave. Each wave lists the tasks that run in parallel within it. Tasks that touch shared-infra files get solo waves. Example:
+
+```
+### Wave 1 (parallel: 2 tasks)
+- Task 1: User DTO
+- Task 2: Auth guard stub
+
+### Wave 2 (solo — touches package.json)
+- Task 3: Install passport-jwt + wire module
+
+### Wave 3 (parallel: 2 tasks)
+- Task 4: JWT strategy
+- Task 5: Refresh-token strategy
+```
+
+<!-- BONSAI TIER-2 EDIT: speed-mode parallel flow (2026-04-24) — see docs/bonsai/tier-2-edits.md -->
 
 ## Task Structure
 
@@ -106,6 +164,8 @@ This structure informs the task decomposition. Each task should produce self-con
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
+
+**Wave:** [wave number this task belongs to — matches `## Waves` section above]
 
 - [ ] **Step 1: Write the failing test**
 
@@ -138,6 +198,49 @@ Expected: PASS
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
+````
+
+### Speed-Mode Task Template
+
+In speed-mode plans, the task template collapses to three steps — the controller handles commits at wave boundaries, so individual tasks do not commit. The implementer is also forbidden from using `git add -A` / `git add .`; staging must be explicit by filename.
+
+````markdown
+### Task N: [Component Name]
+
+**Files:**
+- Create: `exact/path/to/file.py`
+- Modify: `exact/path/to/existing.py:123-145`
+- Test: `tests/exact/path/to/test.py`
+
+**Wave:** N
+
+- [ ] **Step 1: Write test + implementation**
+
+Test:
+```python
+def test_specific_behavior():
+    result = function(input)
+    assert result == expected
+```
+
+Implementation:
+```python
+def function(input):
+    return expected
+```
+
+- [ ] **Step 2: Run tests to verify pass**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: PASS
+
+- [ ] **Step 3: Stage declared files**
+
+```bash
+git add tests/path/test.py src/path/file.py
+```
+
+⚠ Do NOT use `git add -A` or `git add .`. Do NOT commit — the controller commits at wave boundary.
 ````
 
 ## No Placeholders
