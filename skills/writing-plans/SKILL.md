@@ -204,6 +204,8 @@ git commit -m "feat: add specific feature"
 
 In speed-mode plans, the task template collapses to three steps — the controller handles commits at wave boundaries, so individual tasks do not commit. The implementer is also forbidden from using `git add -A` / `git add .`; staging must be explicit by filename.
 
+**TDD tradeoff:** the 3-step template writes test + implementation together instead of splitting red/green. This loses the "watch it fail first" protection — a test written alongside its implementation that happens to pass on first run is indistinguishable from a real TDD-authored test. The JIT context7 verification during implementation and the wave-boundary test-run before commit partially compensate. For critical or security-sensitive tasks, set `**Flow:** careful-mode` in the plan header to use the 5-step per-task flow instead.
+
 ````markdown
 ### Task N: [Component Name]
 

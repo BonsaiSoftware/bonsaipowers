@@ -127,6 +127,8 @@ Note on tool name: Claude Code SDK versions vary. Older versions emit `Task`, cu
 - `BLOCKED: shared-infra` — the implementer hit a shared-infra file. Same treatment: follow-up solo wave.
 - `BLOCKED: other` or `NEEDS_CONTEXT` — follow existing escalation rules (see `## Handling Implementer Status`).
 
+**Wave-split invariant:** when a task blocks and gets rescheduled as a follow-up solo wave, do NOT commit the partial wave. The unblocked tasks' work stays staged in the working tree. Run the solo follow-up (implementer + spec review) to completion, then commit the UNION of the original wave's unblocked work and the solo follow-up's work as a single wave-commit at the boundary. This preserves the "one commit per wave" invariant across splits.
+
 **5. Dispatch N spec reviewers in ONE message.** One parallel spec-reviewer per task, each using `./spec-reviewer-prompt.md` with a scoped diff command (`git diff --staged -- <task's declared files>`). Review loops happen per-task and in parallel — if one returns ❌, re-dispatch just that task's implementer to fix while other spec reviewers finish.
 
 **6. Wave-boundary commit.** After all spec reviewers return ✅:
@@ -135,8 +137,8 @@ Note on tool name: Claude Code SDK versions vary. Older versions emit `Task`, cu
 - For each task in the wave: `git add <file1> <file2> …` — stage ONLY the declared files by explicit name. Belt-and-braces protection against an implementer that wrote outside scope without self-reporting.
 - `git diff --cached --name-only` — verify the staged file set equals the union of declared files. Any extra OR missing file is a failure condition; escalate.
 - Run the full project test suite (command from `CLAUDE.md` or `package.json`'s `test` script). Wave-boundary test gate catches cross-task regressions.
-- If tests fail but each task's individual tests passed, bisect: unstage one task at a time and re-run until the offender is found; dispatch a fix subagent scoped to that task's files.
-- Create a single commit: `feat(wave-N): <comma-separated task titles>`. For solo waves: `feat(solo): <task title>`. The implementer never commits — the controller does.
+- If tests fail but each task's individual tests passed, bisect: unstage one task at a time and re-run until the offender is found; dispatch a fix subagent scoped to that task's files. (This works because tasks within a wave are guaranteed file-disjoint by the Step 2 pre-dispatch check, so unstaging one task's declared files cleanly isolates its changes.)
+- Create a single commit. Subject format: `<type>(wave-N): <semicolon-separated task titles>` for multi-task waves, or `<type>(solo): <task title>` for solo waves. Pick `<type>` from conventional-commits (`feat`, `fix`, `refactor`, `chore`, `docs`) based on what the wave actually contains — default `feat`. Strip colons from task titles (rephrase or replace with `—`) to avoid ambiguity with strict commitlint parsers that parse only up to the first `:`. The implementer never commits — the controller does.
 
 **7. Advance to next wave.** Go back to step 1.
 
