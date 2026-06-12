@@ -9,7 +9,7 @@
     {
       "name": "bonsaipowers",
       "description": "Bonsai Software fork of Superpowers: TDD, debugging, collaboration patterns, and Bonsai-specific skills for Claude Code",
-      "version": "5.0.7",
+      "version": "5.1.0",
       "source": "./",
       "author": {
         "name": "Bonsai Software",
