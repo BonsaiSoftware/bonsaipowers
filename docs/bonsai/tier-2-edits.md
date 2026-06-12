@@ -415,8 +415,8 @@ If any of these regress, confirm the marker survived the most recent upstream me
 ### 2026-06-12 — brainstorming: dedupe checklist vs process sections + parallel research queries
 
 **File:** `skills/brainstorming/SKILL.md`
-**Marker:** `<\!-- BONSAI TIER-2 EDIT: ... checklist steps 4-5 are deliberately one-line pointers to those sections, do not re-expand them. ... -->` (updated existing marker)
-**Commit:** (fill in after commit)
+**Marker:** `<!-- BONSAI TIER-2 EDIT: ... checklist steps 4-5 are deliberately one-line pointers to those sections, do not re-expand them. ... -->` (updated existing marker)
+**Commit:** `03f60aa`
 
 **What changed:** Checklist steps 4 and 5 no longer duplicate the full rule text — they are one-line pointers to the canonical "Researching unknowns" and "Exploring approaches" process sections, where each rule is now stated exactly once. Added a parallel-execution instruction (in checklist step 4 and as a bolded line before "Two tools, two purposes") telling the agent to issue all context7 and WebSearch queries in a single message instead of sequentially. No rule was weakened: the HARD-GATE, the skip conditions, the "training data is stale" framing, and the Azure-native preference are all unchanged in the process sections.
 
