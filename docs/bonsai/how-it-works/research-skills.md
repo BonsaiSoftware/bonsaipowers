@@ -1,5 +1,7 @@
 # Bonsai Superpowers Skills System: Complete Research Report
 
+> **Frozen research archive (89KB — ~22k tokens) — do not load into context during routine work.** The operative content is summarized in [README.md](README.md). Read this file only when deep-diving its specific topic.
+
 **Generated:** 2026-04-10  
 **Research Scope:** Exhaustive inventory and analysis of the skills system  
 **Directory:** `/Volumes/corsair-ex/bonsai-git/bonsaipowers/skills/`

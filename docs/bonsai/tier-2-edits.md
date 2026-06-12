@@ -6,7 +6,28 @@ Every intentional edit to a Tier 2 (orchestration) skill in this fork. Used as t
 
 **What does NOT belong here:** additive `bonsai-*` skills (Tier 3, track in git only), personal `~/.claude/` customizations, project-level `CLAUDE.md` overrides in consuming repos.
 
-**On upstream merge:** walk this file top to bottom. For each entry, open the edited file, find the marker comment (`<!-- BONSAI TIER-2 EDIT: ... -->`), and verify the described change is still present after the merge resolution.
+**On upstream merge:** read the index below first — do NOT read this whole file. For each file that had a merge conflict, jump to its index entries, open the full entry for each, find the marker comment (`<!-- BONSAI TIER-2 EDIT: ... -->`) in the edited file, and verify the described change is still present after the merge resolution. Files without conflicts only need a marker-presence check (`grep -rl "BONSAI TIER-2 EDIT" skills/`).
+
+---
+
+## Index
+
+| Date | File(s) | Edit |
+|---|---|---|
+| 2026-04-10 | `skills/brainstorming/SKILL.md` | Upgrade step 1 (structured codebase recon) + insert step 4 (research unknowns) |
+| 2026-04-12 | `skills/writing-plans/SKILL.md` | Insert Research section: context7, best-practices skills, owasp, pitfall scans |
+| 2026-04-12 | `skills/executing-plans/SKILL.md` | Add skill loading + execution constraints (context7, OWASP, best-practices) |
+| 2026-04-12 | `skills/subagent-driven-development/` (SKILL + prompts) | Add skill loading, execution constraints, OWASP verification to subagent prompts |
+| 2026-04-12 | `skills/brainstorming/SKILL.md` | Harden research step (context7 HARD-GATE) + Azure-native preference in approaches |
+| 2026-04-13 | `skills/brainstorming/SKILL.md` | Harden research step: WebSearch into HARD-GATE matching context7 |
+| 2026-04-15 | `skills/subagent-driven-development/SKILL.md`, `skills/executing-plans/SKILL.md` | Demote using-git-worktrees from REQUIRED to OPTIONAL |
+| 2026-04-15 | `skills/brainstorming/SKILL.md` | REMOVED the `test-random` smoke test step (and the `test-random` skill) |
+| 2026-04-15 | `skills/subagent-driven-development/SKILL.md` | Add optional runtime UI verification breadcrumb |
+| 2026-04-24 | `skills/writing-plans/SKILL.md` | Speed-mode plan format (Dependency Graph, Shared Infrastructure, Waves, Flow, 3-step tasks) |
+| 2026-04-24 | `skills/subagent-driven-development/SKILL.md` | Wave-based controller loop with parallel dispatch + wave commit + bisect protocol |
+| 2026-04-24 | `skills/subagent-driven-development/implementer-prompt.md` | Scope lockdown, shared-infra read-only, explicit staging, no-commit, staged-files reporting |
+| 2026-04-24 | `skills/subagent-driven-development/spec-reviewer-prompt.md` | Scoped diff review limits reviewer to the task's declared files |
+| 2026-06-12 | `skills/brainstorming/SKILL.md` | Dedupe checklist vs process sections + parallel research queries |
 
 ---
 
@@ -388,5 +409,22 @@ If any of these regress, confirm the marker survived the most recent upstream me
 1. Each spec reviewer's prompt has a `## Review Scope` section with a specific `git diff --staged -- <files>` command.
 2. Each reviewer reports only on its task's files — no cross-task comments.
 3. If an implementer silently writes to a file outside its scope, the spec reviewer flags the scope violation.
+
+---
+
+### 2026-06-12 — brainstorming: dedupe checklist vs process sections + parallel research queries
+
+**File:** `skills/brainstorming/SKILL.md`
+**Marker:** `<\!-- BONSAI TIER-2 EDIT: ... checklist steps 4-5 are deliberately one-line pointers to those sections, do not re-expand them. ... -->` (updated existing marker)
+**Commit:** (fill in after commit)
+
+**What changed:** Checklist steps 4 and 5 no longer duplicate the full rule text — they are one-line pointers to the canonical "Researching unknowns" and "Exploring approaches" process sections, where each rule is now stated exactly once. Added a parallel-execution instruction (in checklist step 4 and as a bolded line before "Two tools, two purposes") telling the agent to issue all context7 and WebSearch queries in a single message instead of sequentially. No rule was weakened: the HARD-GATE, the skip conditions, the "training data is stale" framing, and the Azure-native preference are all unchanged in the process sections.
+
+**Why:** The duplicated text cost ~800 tokens on every brainstorm for every team member and created drift risk (two copies of the same rule eventually disagree). Serialized research queries added 15-30s of avoidable latency per brainstorm; the queries are independent so there is no reason to run them one at a time.
+
+**Verification:** In a fresh session, brainstorm a feature with an external dependency:
+1. Step 4 still runs at least one context7 query AND at least one WebSearch query before approaches are proposed, issued together in one parallel message.
+2. Step 5 still includes and recommends the Azure-native option for cloud-touching features.
+3. The agent does not skip the research because the checklist line is now short — the HARD-GATE in the process section must still bind.
 
 ---

@@ -1,5 +1,7 @@
 # Superpowers Plugin Customization Locations Research
 
+> **Frozen research archive — do not load into context during routine work.** The operative content is summarized in [README.md](README.md). Read this file only when deep-diving its specific topic.
+
 **Date:** 2026-04-10  
 **Repository:** /Volumes/corsair-ex/bonsai-git/bonsaipowers/  
 **Objective:** Document where users should place custom skills, agents, settings, and hooks to survive plugin updates without being clobbered

@@ -8,10 +8,12 @@ Research-depth notes on how the **superpowers** plugin system (this repo) works 
 
 ## Read in this order
 
-1. **[research-philosophy.md](research-philosophy.md)** — start here. What superpowers *is*, why skills instead of prompts, the "your human partner" terminology, the zero-dependency design, and the 94%-rejection contributor policy that tells you what kind of project you're contributing to.
-2. **[research-hooks-harnesses.md](research-hooks-harnesses.md)** — how the system actually boots. The SessionStart hook, the polyglot `run-hook.cmd` wrapper, how the `using-superpowers` skill gets injected into the conversation context, and how the same repo adapts to Claude Code, Cursor, Copilot CLI, Codex, Gemini CLI, and OpenCode.
-3. **[research-skills.md](research-skills.md)** — the skill catalog. All 14 primary skills with their frontmatter, core rules, red-flag tables, flowcharts, and how they compose. The longest of the four docs; use it as a reference.
-4. **[research-workflow.md](research-workflow.md)** — how the skills chain into a complete development lifecycle: brainstorm → worktree → plan → subagent-driven execution (with TDD, verification, review) → finishing the branch. Includes the legacy slash-command shims and the `code-reviewer` subagent.
+**"The system in one page" below covers the operative content — for routine work, read only this README.** The four `research-*.md` files are **frozen research archives** (~160KB combined; `research-skills.md` alone is 89KB). Do not load them into context during routine work; open one only when deep-diving its specific topic:
+
+1. **[research-philosophy.md](research-philosophy.md)** — what superpowers *is*, why skills instead of prompts, the "your human partner" terminology, the zero-dependency design, the 94%-rejection contributor policy.
+2. **[research-hooks-harnesses.md](research-hooks-harnesses.md)** — how the system boots: the SessionStart hook, the polyglot `run-hook.cmd` wrapper, the `using-superpowers` injection, multi-harness adaptation.
+3. **[research-skills.md](research-skills.md)** — the skill catalog: all 14 primary skills with frontmatter, core rules, red-flag tables, flowcharts. The longest doc; reference only.
+4. **[research-workflow.md](research-workflow.md)** — how skills chain into the full lifecycle: brainstorm → worktree → plan → subagent-driven execution → finishing the branch.
 
 ---
 

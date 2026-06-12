@@ -1,5 +1,7 @@
 # Superpowers Plugin System: Hooks and Multi-Harness Architecture
 
+> **Frozen research archive — do not load into context during routine work.** The operative content is summarized in [README.md](README.md). Read this file only when deep-diving its specific topic.
+
 **Research Date:** 2026-04-10  
 **Repository:** /Volumes/corsair-ex/bonsai-git/bonsaipowers/  
 **Scope:** Complete investigation of SessionStart hook mechanism, context injection, and multi-harness support

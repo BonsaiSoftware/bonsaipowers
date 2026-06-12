@@ -1,5 +1,7 @@
 # Research: MCP Integration with Claude Code and Superpowers Plugin
 
+> **Frozen research archive — do not load into context during routine work.** The operative content is summarized in [README.md](README.md). Read this file only when deep-diving its specific topic.
+
 **Date**: April 10, 2026  
 **Purpose**: Foundational research for customization guide on integrating Model Context Protocol (MCP) servers with Claude Code and Superpowers skills.
 

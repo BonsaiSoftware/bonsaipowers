@@ -10,10 +10,13 @@ A practical guide for the Bonsai team on how to extend this plugin with our own 
 
 ## Reading order
 
-1. This README — the strategy and playbook for the fork.
-2. **[research-customization-locations.md](research-customization-locations.md)** — authoritative "where do files live" map per harness. Still useful for understanding personal vs project vs plugin scope.
-3. **[research-custom-skills.md](research-custom-skills.md)** — deep read of `writing-skills` and the exact frontmatter format used by every skill.
-4. **[research-mcp.md](research-mcp.md)** — how Claude Code's MCP system works, `.mcp.json` schema, and how skills can call MCP tools.
+1. This README — the strategy and playbook for the fork. **For routine maintenance work, this is all you need to read.**
+
+The `research-*.md` files below are **frozen research archives** (~70KB combined — do not load them into context during routine work; everything operative is summarized in this README). Open one only when deep-diving its specific topic:
+
+- **[research-customization-locations.md](research-customization-locations.md)** — "where do files live" map per harness (personal vs project vs plugin scope).
+- **[research-custom-skills.md](research-custom-skills.md)** — deep read of `writing-skills` and the exact skill frontmatter format.
+- **[research-mcp.md](research-mcp.md)** — Claude Code's MCP system, `.mcp.json` schema, how skills call MCP tools.
 
 ---
 

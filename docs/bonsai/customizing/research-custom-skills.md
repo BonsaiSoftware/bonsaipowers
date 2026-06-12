@@ -1,5 +1,7 @@
 # Research: Authoring Custom Skills for Superpowers
 
+> **Frozen research archive — do not load into context during routine work.** The operative content is summarized in [README.md](README.md). Read this file only when deep-diving its specific topic.
+
 Raw research material on the `writing-skills` skill, its supporting files, the frontmatter format used by every existing skill, the discovery mechanism, and the TDD-for-documentation methodology.
 
 ---

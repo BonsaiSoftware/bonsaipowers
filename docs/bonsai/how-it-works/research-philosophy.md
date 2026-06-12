@@ -1,5 +1,7 @@
 # Research: Superpowers Philosophy, Docs, and the "Why"
 
+> **Frozen research archive — do not load into context during routine work.** The operative content is summarized in [README.md](README.md). Read this file only when deep-diving its specific topic.
+
 Raw research material on what superpowers believes, how it's pitched, the contributor guardrails, and how the naming/fork relationship works.
 
 ---

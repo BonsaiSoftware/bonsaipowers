@@ -1,5 +1,7 @@
 # Research: Commands, Subagents, and the Plan-Write / Plan-Execute Workflow
 
+> **Frozen research archive — do not load into context during routine work.** The operative content is summarized in [README.md](README.md). Read this file only when deep-diving its specific topic.
+
 Raw research material on how the superpowers system orchestrates work end-to-end: from slash commands through subagents, plan writing, plan execution, TDD, verification, review, and branch-finishing.
 
 ---
