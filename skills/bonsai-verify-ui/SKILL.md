@@ -20,6 +20,15 @@ contention documented in Chrome's 2026 multi-agent guidance.
 **No auto-fix.** Verification exposes problems and diagnoses root causes. The human decides the
 next step (debug manually, re-dispatch to a fix pass, revert).
 
+**Parallel-browser variant (optional, not assumed).** This skill defaults to one browser on the
+`chrome-devtools` MCP server. Some setups additionally configure separate per-agent servers
+(`chrome-1`..`chrome-N`, each its own Chrome profile) so multiple agents can drive their own
+browser concurrently. Do NOT assume these exist: only use them if `mcp__chrome-N__*` tools are
+actually available, otherwise stay single-browser on `chrome-devtools`. The two are opposite
+answers to the same contention problem (serialize vs. isolate). Setup and config for the
+per-agent servers live in the SOP at `sop/05-build/07-ai-tooling/parallel-chrome-devtools-mcp.md`
+(repo `BonsaiSoftware/bonsai-software-sop`).
+
 ## When to Use
 
 - After `superpowers:subagent-driven-development` completes its final code reviewer pass and
