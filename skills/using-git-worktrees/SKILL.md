@@ -30,7 +30,7 @@ BRANCH=$(git branch --show-current)
 git rev-parse --show-superproject-working-tree 2>/dev/null
 ```
 
-**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 3 (Project Setup). Do NOT create another worktree.
+**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 2 (Carry Over Ignored Local State). Do NOT create another worktree.
 
 Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
@@ -50,7 +50,7 @@ Honor any existing declared preference without asking. If the user declines cons
 
 ### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 3.
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 2.
 
 Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
 
@@ -111,6 +111,40 @@ cd "$path"
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
+## Step 2: Carry Over Ignored Local State (IMPORTANT)
+
+**A worktree is a fresh checkout: everything gitignored is missing.** Only tracked files come
+along, so the local state the app needs at runtime (secrets and generated code) stays behind in
+the main checkout. The build then breaks in ways that look like your change caused them.
+
+This applies however the workspace was created, native worktree tools included.
+
+Two categories, both easy to miss:
+
+**a. Local config the app reads at boot**, like `.env`, `.env.local`, service-account JSON or
+certificates. Copy them from the main checkout:
+
+```bash
+main=$(git worktree list --porcelain | awk 'NR==2{print $2}')  # first worktree = main checkout
+for f in .env .env.local; do [ -f "$main/$f" ] && cp "$main/$f" .; done
+```
+
+**b. Generated-but-ignored artifacts**, like Prisma/ORM clients, protobuf or GraphQL codegen,
+compiled schemas. Installing dependencies does not restore these, they need their own generate
+step. Grep the ignore rules for the giveaway, then run the project's generate script:
+
+```bash
+git check-ignore -v $(git ls-files --others --directory) 2>/dev/null | head
+grep -rnE "generated|codegen" .gitignore */.gitignore 2>/dev/null
+```
+
+```bash
+# e.g. Prisma
+pnpm db:generate
+```
+
+If the repo's CLAUDE.md documents a setup sequence, run that one: it is the authoritative list.
+
 ## Step 3: Project Setup
 
 Auto-detect and run appropriate setup:
@@ -132,22 +166,28 @@ if [ -f go.mod ]; then go mod download; fi
 
 ## Step 4: Verify Clean Baseline
 
-Run tests to ensure workspace starts clean:
+Run the project's **build**, not only its tests. Tests often stub out the config and codegen that
+Step 2 restores, so they pass in a workspace that cannot build:
 
 ```bash
-# Use project-appropriate command
-npm test / cargo test / pytest / go test ./...
+# Use project-appropriate commands
+npm run build && npm test
+cargo build && cargo test
+pytest
+go build ./... && go test ./...
 ```
 
-**If tests fail:** Report failures, ask whether to proceed or investigate.
+**If it fails:** Report the failure, ask whether to proceed or investigate. Say explicitly whether
+the failure is pre-existing (reproduce it in the main checkout) or introduced by the workspace,
+otherwise it gets misattributed to the work later.
 
-**If tests pass:** Report ready.
+**If it passes:** Report ready.
 
 ### Report
 
 ```
 Worktree ready at <full-path>
-Tests passing (<N> tests, 0 failures)
+Build clean, tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
@@ -166,7 +206,9 @@ Ready to implement <feature-name>
 | Global path exists | Use it (backward compat) |
 | Directory not ignored | Add to .gitignore + commit |
 | Permission error on create | Sandbox fallback, work in place |
-| Tests fail during baseline | Report failures + ask |
+| App reads `.env` or other secrets | Copy them from the main checkout (Step 2a) |
+| Ignored codegen (Prisma, protobuf) | Run the project's generate script (Step 2b) |
+| Baseline fails | Report + ask, and say whether it is pre-existing |
 | No package.json/Cargo.toml | Skip dependency install |
 
 ## Common Mistakes
@@ -196,6 +238,19 @@ Ready to implement <feature-name>
 - **Problem:** Can't distinguish new bugs from pre-existing issues
 - **Fix:** Report failures, get explicit permission to proceed
 
+### Treating dependency install as the whole setup
+
+- **Problem:** `.env` and generated clients are gitignored, so they are absent in a fresh
+  worktree. The app builds in the main checkout and fails in the worktree, and the failure gets
+  blamed on the change being made.
+- **Fix:** Step 2, copy ignored local config and run the project's generate script.
+
+### Blaming a pre-existing failure on the worktree (or the reverse)
+
+- **Problem:** A build that was already broken in the main checkout looks like worktree fallout,
+  and real worktree fallout looks like a repo bug. Both send you down the wrong path.
+- **Fix:** Reproduce in the main checkout before concluding, and say which it is.
+
 ## Red Flags
 
 **Never:**
@@ -203,13 +258,15 @@ Ready to implement <feature-name>
 - Use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
 - Skip Step 1a by jumping straight to Step 1b's git commands
 - Create worktree without verifying it's ignored (project-local)
-- Skip baseline test verification
-- Proceed with failing tests without asking
+- Skip baseline verification
+- Proceed with a failing baseline without asking
+- Assume a workspace is ready to run because dependencies installed
 
 **Always:**
 - Run Step 0 detection first
 - Prefer native tools over git fallback
 - Follow directory priority: existing > global legacy > instruction file > default
 - Verify directory is ignored for project-local
+- Carry over ignored local config and re-run ignored codegen
 - Auto-detect and run project setup
-- Verify clean test baseline
+- Verify a clean **build** baseline, not only tests
